@@ -106,9 +106,11 @@ export const Message = ({
       const liveLayers = storage.get("layers");
       const layer = liveLayers.get(id);
       if (layer) {
-        layer.set("value", newValue);
-        layer.set("negativePrompt", newNegativePrompt);
-        layer.set("images", newImages);
+        layer.update({
+          value: newValue,
+          negativePrompt: newNegativePrompt,
+          images: newImages,
+        });
       }
     },
     [],
