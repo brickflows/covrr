@@ -191,11 +191,16 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       for (const id of self.presence.selection) {
         const layer = liveLayers.get(id);
 
-        if (layer)
-          layer.update({
-            x: (layer.get("x") as number) + offset.x,
-            y: (layer.get("y") as number) + offset.y,
-          });
+        if (layer) {
+          const currentX = layer.toObject().x;
+          const currentY = layer.toObject().y;
+          if (currentX !== undefined && currentY !== undefined) {
+            layer.update({
+              x: currentX + offset.x,
+              y: currentY + offset.y,
+            });
+          }
+        }
       }
 
       setCanvasState({ mode: CanvasMode.Translating, current: point });
