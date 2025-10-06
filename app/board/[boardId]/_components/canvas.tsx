@@ -481,22 +481,26 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         for (let i = layerIds.length - 1; i >= 0; i--) {
           const layer = layers.get(layerIds[i]);
           if (layer && layer.get("type") !== LayerType.Connection) {
-            const bounds = {
-              x: layer.get("x"),
-              y: layer.get("y"),
-              width: layer.get("width"),
-              height: layer.get("height"),
-            };
+            const layerData = layer.toObject();
+            if ("x" in layerData && "y" in layerData &&
+                "width" in layerData && "height" in layerData) {
+              const bounds = {
+                x: layerData.x,
+                y: layerData.y,
+                width: layerData.width,
+                height: layerData.height,
+              };
 
-            if (
-              point.x >= bounds.x &&
-              point.x <= bounds.x + bounds.width &&
-              point.y >= bounds.y &&
-              point.y <= bounds.y + bounds.height &&
-              layerIds[i] !== canvasState.startLayerId
-            ) {
-              endLayerId = layerIds[i];
-              break;
+              if (
+                point.x >= bounds.x &&
+                point.x <= bounds.x + bounds.width &&
+                point.y >= bounds.y &&
+                point.y <= bounds.y + bounds.height &&
+                layerIds[i] !== canvasState.startLayerId
+              ) {
+                endLayerId = layerIds[i];
+                break;
+              }
             }
           }
         }
