@@ -3,8 +3,23 @@ import { shallow } from "@liveblocks/react";
 import { useStorage, useSelf } from "@/liveblocks.config";
 import type { Layer, XYWH } from "@/types/canvas";
 
+type PositionedLayer = Extract<
+  Layer,
+  {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
+>;
+
+const isPositionedLayer = (layer: Layer): layer is PositionedLayer =>
+  "x" in layer && "y" in layer && "width" in layer && "height" in layer;
+
 const boundingBox = (layers: Layer[]): XYWH | null => {
-  const first = layers[0];
+  const positionedLayers = layers.filter(isPositionedLayer);
+
+  const first = positionedLayers[0];
 
   if (!first) return null;
 
@@ -13,8 +28,8 @@ const boundingBox = (layers: Layer[]): XYWH | null => {
   let top = first.y;
   let bottom = first.y + first.height;
 
-  for (let i = 1; i < layers.length; i++) {
-    const { x, y, width, height } = layers[i];
+  for (let i = 1; i < positionedLayers.length; i++) {
+    const { x, y, width, height } = positionedLayers[i];
 
     if (left > x) left = x;
     if (right < x + width) right = x + width;

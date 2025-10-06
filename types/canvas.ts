@@ -10,6 +10,7 @@ export type BookDetails = {
   genres?: string;      // comma-separated
   audience?: string;    // comma-separated
   keywords?: string;    // comma-separated
+  mood?: string;        // comma-separated or descriptive
   synopsis?: string;
   coverRequirements?: string;
   thingsToAvoid?: string;

@@ -290,13 +290,13 @@ export class CoverGenerator {
   }
 
   private summarizeMarketAnalysis(marketInsight: any): MarketAnalysisResult {
-    const topStyles = marketInsight.topCompetitors
+    const topStyles: string[] = marketInsight.topCompetitors
       .flatMap((c: any) => c.visualElements)
       .slice(0, 5)
-      .map((e: any) => e.value);
+      .map((e: any) => String(e.value));
 
     return {
-      topCompetitorStyles: [...new Set(topStyles)],
+      topCompetitorStyles: Array.from(new Set<string>(topStyles)),
       saturatedElements: marketInsight.saturatedElements,
       opportunities: marketInsight.differentiationOpportunities,
       recommendation: marketInsight.marketGap

@@ -39,7 +39,10 @@ export const Text = ({
   const updateValue = useMutation(({ storage }, newValue: string) => {
     const liveLayers = storage.get("layers");
 
-    liveLayers.get(id)?.set("value", newValue);
+    const layer = liveLayers.get(id);
+    if (layer) {
+      layer.update({ value: newValue });
+    }
   }, []);
 
   const handleContentChange = (e: ContentEditableEvent) => {

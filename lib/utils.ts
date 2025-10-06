@@ -90,6 +90,12 @@ export function findIntersectingLayersWithRectangle(
 
     if (layer == null) continue;
 
+    if (
+      !("x" in layer && "y" in layer && "width" in layer && "height" in layer)
+    ) {
+      continue;
+    }
+
     const { x, y, height, width } = layer;
 
     if (

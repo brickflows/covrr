@@ -29,6 +29,7 @@ export function BookDetailsPopover({ boardId }: BookDetailsPopoverProps) {
     genres: "",
     audience: "",
     keywords: "",
+    mood: "",
     synopsis: "",
     coverRequirements: "",
     thingsToAvoid: "",
@@ -55,6 +56,7 @@ export function BookDetailsPopover({ boardId }: BookDetailsPopoverProps) {
       bookDetails.genres,
       bookDetails.audience,
       bookDetails.keywords,
+      bookDetails.mood,
       bookDetails.synopsis,
       bookDetails.coverRequirements,
       bookDetails.thingsToAvoid,
@@ -191,6 +193,20 @@ export function BookDetailsPopover({ boardId }: BookDetailsPopoverProps) {
                 style={{ whiteSpace: "pre-wrap", wordWrap: "break-word", overflowWrap: "break-word" }}
               />
               <p className="text-xs text-gray-500">Separate keywords with commas</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mood">Mood & Tone</Label>
+              <Textarea
+                id="mood"
+                placeholder="Whimsical, dark, hopeful..."
+                value={bookDetails.mood || ""}
+                onChange={(e) => handleInputChange("mood", e.target.value)}
+                rows={2}
+                className="resize-none min-h-[60px]"
+                style={{ whiteSpace: "pre-wrap", wordWrap: "break-word", overflowWrap: "break-word" }}
+              />
+              <p className="text-xs text-gray-500">Use commas to list multiple moods</p>
             </div>
 
             <div className="space-y-2">

@@ -161,6 +161,7 @@ export const updateBookDetails = mutation({
       genres: v.optional(v.string()),
       audience: v.optional(v.string()),
       keywords: v.optional(v.string()),
+      mood: v.optional(v.string()),
       synopsis: v.optional(v.string()),
       coverRequirements: v.optional(v.string()),
       thingsToAvoid: v.optional(v.string()),

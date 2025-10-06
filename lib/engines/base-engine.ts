@@ -78,7 +78,7 @@ export abstract class BaseEngine {
     this.strengths = strengths;
   }
 
-  abstract async analyze(metadata: BookMetadata, marketInsight?: MarketInsight): Promise<EngineOutput>;
+  abstract analyze(metadata: BookMetadata, marketInsight?: MarketInsight): Promise<EngineOutput>;
 
   abstract calculateSuitability(metadata: BookMetadata): number;
 
