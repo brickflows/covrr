@@ -193,8 +193,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
         if (layer)
           layer.update({
-            x: layer.get("x") + offset.x,
-            y: layer.get("y") + offset.y,
+            x: (layer.get("x") as number) + offset.x,
+            y: (layer.get("y") as number) + offset.y,
           });
       }
 
