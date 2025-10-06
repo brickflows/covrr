@@ -509,34 +509,41 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           const endLayer = layers.get(endLayerId);
           const startLayer = layers.get(canvasState.startLayerId);
 
-          // Check connection rules for messages
-          if (endLayer.get("type") === LayerType.Message && startLayer.get("type") === LayerType.Message) {
-            const endHasValue = endLayer.get("value");
-            const startHasValue = startLayer.get("value");
+          if (endLayer && startLayer) {
+            // Check connection rules for messages
+            if (endLayer.get("type") === LayerType.Message && startLayer.get("type") === LayerType.Message) {
+              const endData = endLayer.toObject();
+              const startData = startLayer.toObject();
+              const endHasValue = "value" in endData ? endData.value : undefined;
+              const startHasValue = "value" in startData ? startData.value : undefined;
 
-            // Don't allow: sent -> sent OR unsent -> sent
-            // Only allow: sent -> unsent OR unsent -> unsent
-            if (endHasValue) {
-              // Can't connect TO a sent message
-              setCanvasState({
-                mode: CanvasMode.None,
-              });
-              return;
+              // Don't allow: sent -> sent OR unsent -> sent
+              // Only allow: sent -> unsent OR unsent -> unsent
+              if (endHasValue) {
+                // Can't connect TO a sent message
+                setCanvasState({
+                  mode: CanvasMode.None,
+                });
+                return;
+              }
+            }
+
+            // Connection endpoints: right side of start shape, left side of end shape
+            const endData = endLayer.toObject();
+            if ("x" in endData && "y" in endData && "height" in endData) {
+              const endPoint = {
+                x: endData.x,
+                y: endData.y + endData.height / 2
+              };
+
+              insertConnection(
+                canvasState.startLayerId,
+                endLayerId,
+                canvasState.startPoint,
+                endPoint
+              );
             }
           }
-
-          // Connection endpoints: right side of start shape, left side of end shape
-          const endPoint = {
-            x: endLayer.get("x"),
-            y: endLayer.get("y") + endLayer.get("height") / 2
-          };
-
-          insertConnection(
-            canvasState.startLayerId,
-            endLayerId,
-            canvasState.startPoint,
-            endPoint
-          );
         }
 
         setCanvasState({ mode: CanvasMode.None });
