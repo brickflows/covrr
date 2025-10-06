@@ -192,12 +192,12 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         const layer = liveLayers.get(id);
 
         if (layer) {
-          const currentX = layer.toObject().x;
-          const currentY = layer.toObject().y;
-          if (currentX !== undefined && currentY !== undefined) {
+          const layerData = layer.toObject();
+          // Only update layers that have x and y properties (not ConnectionLayer)
+          if ("x" in layerData && "y" in layerData) {
             layer.update({
-              x: currentX + offset.x,
-              y: currentY + offset.y,
+              x: layerData.x + offset.x,
+              y: layerData.y + offset.y,
             });
           }
         }
