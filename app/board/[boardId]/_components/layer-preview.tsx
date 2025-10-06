@@ -83,6 +83,10 @@ const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId
 
         if (!startLayer || !endLayer) return null;
 
+        // Check if layers have x, y, width, height properties
+        if (!("x" in startLayer && "y" in startLayer && "width" in startLayer && "height" in startLayer)) return null;
+        if (!("x" in endLayer && "y" in endLayer && "width" in endLayer && "height" in endLayer)) return null;
+
         const startBounds = {
           x: startLayer.x,
           y: startLayer.y,
