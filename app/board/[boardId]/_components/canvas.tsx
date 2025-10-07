@@ -44,8 +44,7 @@ import { SelectionTools } from "./selection-tools";
 import { Toolbar } from "./toolbar";
 import { ZoomControls } from "./zoom-controls";
 import { BookDetailsPopover } from "./book-details-popover";
-import { ImageTextEditor } from "./image-text-editor";
-import { X } from "lucide-react";
+import { X, Type, ImageIcon } from "lucide-react";
 
 const MAX_LAYERS = 100;
 const MULTISELECTION_THRESHOLD = 5;
@@ -580,12 +579,13 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
   const selections = useOthersMapped((other) => other.presence.selection);
 
-  // Check for selected Image layer for text editor
-  const mySelection = useSelf((me) => me.presence.selection);
-  const selectedImageLayer = useStorage((root) => {
-    if (!mySelection || mySelection.length !== 1) return null;
-    const layer = root.layers.get(mySelection[0]);
-    return layer?.type === LayerType.Image ? { id: mySelection[0], layer } : null;
+  const [editingImageLayerId, setEditingImageLayerId] = useState<string | null>(null);
+
+  // Get the editing image layer
+  const editingImageLayer = useStorage((root) => {
+    if (!editingImageLayerId) return null;
+    const layer = root.layers.get(editingImageLayerId);
+    return layer?.type === LayerType.Image ? layer : null;
   });
 
   const onLayerPointerDown = useMutation(
@@ -664,15 +664,11 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         undo={history.undo}
         redo={history.redo}
       />
-      <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
-
-      {/* Image Text Editor - show when single Image layer selected */}
-      {selectedImageLayer && (
-        <ImageTextEditor
-          layerId={selectedImageLayer.id}
-          textWidgets={selectedImageLayer.layer.textWidgets || []}
-        />
-      )}
+      <SelectionTools
+        camera={camera}
+        setLastUsedColor={setLastUsedColor}
+        onEditImage={(layerId) => setEditingImageLayerId(layerId)}
+      />
 
       <ZoomControls
         scale={camera.scale}
@@ -765,6 +761,45 @@ export const Canvas = ({ boardId }: CanvasProps) => {
               className="absolute top-2 right-2 bg-white text-black rounded-full p-2 hover:bg-gray-200 transition-colors"
             >
               <X size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Right Image Edit Panel */}
+      {editingImageLayer && (
+        <div className="fixed right-0 top-0 bottom-0 w-1/3 bg-white shadow-2xl z-50 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="font-semibold">Image Editor</h2>
+            <button
+              onClick={() => setEditingImageLayerId(null)}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Image Section - Full responsive */}
+          <div className="flex-1 p-4 flex items-center justify-center bg-gray-50">
+            <img
+              src={editingImageLayer.imageUrl}
+              alt=""
+              className="max-w-full max-h-full object-contain"
+              style={{ aspectRatio: `${editingImageLayer.width} / ${editingImageLayer.height}` }}
+            />
+          </div>
+
+          {/* Navigation Buttons */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-2 flex flex-col gap-y-4">
+            <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
+              <Type className="w-5 h-5" />
+            </button>
+            <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
+              <div className="w-5 h-5 bg-orange-500 rounded-full" />
+            </button>
+            <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
+              <ImageIcon className="w-5 h-5" />
             </button>
           </div>
         </div>

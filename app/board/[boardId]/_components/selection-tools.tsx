@@ -1,6 +1,6 @@
 "use client";
 
-import { BringToFront, SendToBack, Trash2 } from "lucide-react";
+import { BringToFront, SendToBack, Trash2, Edit } from "lucide-react";
 import { memo } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,11 @@ import { ColorPicker } from "./color-picker";
 type SelectionToolsProps = {
   camera: Camera;
   setLastUsedColor: (color: Color) => void;
+  onEditImage?: (layerId: string) => void;
 };
 
 export const SelectionTools = memo(
-  ({ camera, setLastUsedColor }: SelectionToolsProps) => {
+  ({ camera, setLastUsedColor, onEditImage }: SelectionToolsProps) => {
     const selection = useSelf((me) => me.presence.selection);
 
     // Check if any selected layer is a Message type
@@ -28,6 +29,14 @@ export const SelectionTools = memo(
         const layer = layers.get(id);
         return layer?.type === LayerType.Message;
       });
+    });
+
+    // Check if selected layer is an Image type (single selection only)
+    const hasImageSelected = useStorage((root) => {
+      if (selection.length !== 1) return false;
+      const layers = root.layers;
+      const layer = layers.get(selection[0]);
+      return layer?.type === LayerType.Image;
     });
 
     const moveToFront = useMutation(
@@ -108,6 +117,35 @@ export const SelectionTools = memo(
               <Trash2 />
             </Button>
           </Hint>
+        </div>
+      );
+    }
+
+    // For Image nodes, show edit button
+    if (hasImageSelected && onEditImage) {
+      return (
+        <div
+          className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
+          style={{
+            transform: `translate(
+              calc(${x}px - 50%),
+              calc(${y - 16}px - 100%)
+          )`,
+          }}
+        >
+          <Hint label="Edit Image">
+            <Button onClick={() => onEditImage(selection[0])} variant="board" size="icon">
+              <Edit />
+            </Button>
+          </Hint>
+
+          <div className="flex items-center pl-2 ml-2 border-l border-t-neutral-200">
+            <Hint label="Delete">
+              <Button variant="board" size="icon" onClick={deleteLayers}>
+                <Trash2 />
+              </Button>
+            </Hint>
+          </div>
         </div>
       );
     }
