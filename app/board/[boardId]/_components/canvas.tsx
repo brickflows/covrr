@@ -2,7 +2,7 @@
 
 import { LiveObject } from "@liveblocks/client";
 import { nanoid } from "nanoid";
-import React, { useCallback, useMemo, useState, useEffect } from "react";
+import React, { useCallback, useState, useMemo, useEffect } from "react";
 
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
@@ -30,6 +30,7 @@ import {
   type Color,
   LayerType,
   type ImageLayer,
+  type Layer,
   type Point,
   type Side,
   type XYWH,
@@ -56,7 +57,6 @@ type CanvasProps = {
 
 export const Canvas = ({ boardId }: CanvasProps) => {
   const layerIds = useStorage((root) => root.layerIds);
-  const layers = useStorage((root) => root.layers);
 
   const pencilDraft = useSelf((me) => me.presence.pencilDraft);
   const [canvasState, setCanvasState] = useState<CanvasState>({
@@ -585,25 +585,33 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
 
   // Get currently selected layer (for image panel)
+  const layersSnapshot = useStorage(
+    (root) => Array.from(root.layers.entries()) as Array<[string, Layer]>,
+  );
+
   const selection = useSelf((me) => me.presence.selection);
   const selectedImageLayer = useMemo<ImageLayer | null>(() => {
     if (!isImagePanelOpen) {
       return null;
     }
 
-    if (!selection || selection.length !== 1 || !layers) {
+    if (!selection || selection.length === 0) {
       return null;
     }
 
-    const layerId = selection[0];
-    const layer = layers.get(layerId);
+    const selectedId = selection[selection.length - 1];
+    const entry = layersSnapshot.find(([id]) => id === selectedId);
+    if (!entry) {
+      return null;
+    }
 
+    const layer = entry[1];
     if (layer?.type === LayerType.Image && "imageUrl" in layer) {
       return layer as ImageLayer;
     }
 
     return null;
-  }, [isImagePanelOpen, selection, layers]);
+  }, [isImagePanelOpen, layersSnapshot, selection]);
 
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
