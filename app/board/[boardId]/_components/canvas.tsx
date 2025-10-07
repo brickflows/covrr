@@ -894,12 +894,34 @@ export const Canvas = ({ boardId }: CanvasProps) => {
               />
             </div>
 
-            {/* Placeholder when image is selected */}
-            <div className="p-4 flex items-center justify-center h-full">
-              <p className="text-gray-400 text-center text-sm">
-                {selectedImageUrl ? "Image selected" : "Select an image to view"}
-              </p>
+            {/* Add Text Widget Button */}
+            <div className="p-4">
+              <button
+                onClick={() => {
+                  const newWidget = {
+                    id: nanoid(),
+                    content: "Text",
+                    x: 50,
+                    y: 50,
+                    width: 200,
+                    height: 100,
+                    fill: { r: 0, g: 0, b: 0 },
+                  };
+                  setTextWidgets(prev => [...prev, newWidget]);
+                }}
+                disabled={!selectedImageUrl}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Add Text
+              </button>
             </div>
+
+            {/* Text Widget Count */}
+            {textWidgets.length > 0 && (
+              <div className="px-4 pb-4 text-xs text-gray-500">
+                {textWidgets.length} text widget(s)
+              </div>
+            )}
           </div>
         </div>
       )}
