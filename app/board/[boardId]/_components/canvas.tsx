@@ -581,29 +581,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
   const selections = useOthersMapped((other) => other.presence.selection);
 
-  // Image panel state - opened via toolbar, shows selected image
+  // Image panel state - simple approach with page state
   const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
-
-  const selection = useSelf((me) => me.presence.selection);
-  const selectedLayerId =
-    selection && selection.length > 0 ? selection[selection.length - 1] : null;
-
-  const selectedImageLayer = useStorage<ImageLayer | null>((root) => {
-    if (!isImagePanelOpen || !selectedLayerId) {
-      return null;
-    }
-
-    const layer = root.layers.get(selectedLayerId);
-    if (!layer) {
-      return null;
-    }
-
-    if (layer.type === LayerType.Image && "imageUrl" in layer) {
-      return layer as ImageLayer;
-    }
-
-    return null;
-  });
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
@@ -717,6 +697,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
               boardId={boardId}
               selectionColor={layerIdsToColorSelection[layerId]}
               onImageClick={(url) => setSelectedImage(url)}
+              onImageSelect={(url) => setSelectedImageUrl(url)}
             />
           ))}
           <SelectionBox
@@ -797,10 +778,10 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
           {/* Section 1: Image Display */}
           <div className="relative flex-1 flex items-center justify-center bg-gray-50 border-r overflow-hidden">
-            {selectedImageLayer ? (
+            {selectedImageUrl ? (
               <div className="w-full h-full flex items-center justify-center p-4">
                 <img
-                  src={selectedImageLayer.imageUrl}
+                  src={selectedImageUrl}
                   alt=""
                   className="w-full h-full object-contain"
                 />

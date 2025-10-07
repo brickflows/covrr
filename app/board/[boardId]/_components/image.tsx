@@ -7,6 +7,7 @@ interface ImageProps {
   onPointerDown: (e: React.PointerEvent, layerId: string) => void;
   selectionColor?: string;
   onImageClick?: (layerId: string) => void;
+  onImageSelect?: (imageUrl: string) => void;
 }
 
 export const Image = ({
@@ -15,6 +16,7 @@ export const Image = ({
   onPointerDown,
   selectionColor,
   onImageClick,
+  onImageSelect,
 }: ImageProps) => {
   const { x, y, width, height, imageUrl, textWidgets = [] } = layer;
 
@@ -24,7 +26,10 @@ export const Image = ({
       y={y}
       width={width}
       height={height}
-      onPointerDown={(e) => onPointerDown(e, id)}
+      onPointerDown={(e) => {
+        onPointerDown(e, id);
+        onImageSelect?.(imageUrl);
+      }}
       onClick={() => onImageClick?.(id)}
       style={{
         outline: selectionColor ? `2px solid ${selectionColor}` : "none",
