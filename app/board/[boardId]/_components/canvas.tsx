@@ -583,7 +583,17 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   // Image panel state - simple approach with page state
   const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [panelWidth, setPanelWidth] = useState(600); // Default width in pixels
+  // Responsive panel width: 40% on large screens, max 50% on smaller screens
+  const getInitialPanelWidth = () => {
+    if (typeof window === 'undefined') return 600;
+    const screenWidth = window.innerWidth;
+    if (screenWidth <= 1200) {
+      return Math.min(screenWidth * 0.5, screenWidth - 100); // 50% max on small screens
+    }
+    return Math.min(screenWidth * 0.4, screenWidth * 0.5); // 40% on large screens, max 50%
+  };
+
+  const [panelWidth, setPanelWidth] = useState(getInitialPanelWidth());
   const [isResizingPanel, setIsResizingPanel] = useState(false);
 
   // Text widgets state
@@ -596,6 +606,23 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     height: number;
     fill: Color;
   }>>([]);
+
+  // Handle window resize to keep panel responsive
+  useEffect(() => {
+    const handleResize = () => {
+      const screenWidth = window.innerWidth;
+      let newWidth;
+      if (screenWidth <= 1200) {
+        newWidth = Math.min(screenWidth * 0.5, screenWidth - 100); // 50% max on small screens
+      } else {
+        newWidth = Math.min(screenWidth * 0.4, screenWidth * 0.5); // 40% on large screens
+      }
+      setPanelWidth(newWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Debug logging
   useEffect(() => {
