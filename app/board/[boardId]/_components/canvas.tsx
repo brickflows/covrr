@@ -834,7 +834,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           {/* Section 1: Image Display with Text Widgets */}
           <div className="relative flex-1 flex items-center justify-center bg-gray-50 border-r overflow-hidden">
             {selectedImageUrl ? (
-              <div className="relative w-full h-full flex items-center justify-center p-4">
+              <div className="relative w-full h-full">
                 <img
                   src={selectedImageUrl}
                   alt=""
@@ -842,41 +842,39 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                   id="image-preview"
                 />
                 {/* Text Widget Overlay */}
-                <div className="absolute inset-0 m-4">
-                  <TextWidgetEditor
-                    widgets={textWidgets}
-                    onUpdateWidget={(id, updates) => {
-                      setTextWidgets(prev =>
-                        prev.map(w => w.id === id ? { ...w, ...updates } : w)
-                      );
-                    }}
-                    onDeleteWidget={(id) => {
-                      setTextWidgets(prev => prev.filter(w => w.id !== id));
-                    }}
-                    onReorderWidget={(id, direction) => {
-                      setTextWidgets(prev => {
-                        const index = prev.findIndex((w) => w.id === id);
-                        if (index === -1) return prev;
+                <TextWidgetEditor
+                  widgets={textWidgets}
+                  onUpdateWidget={(id, updates) => {
+                    setTextWidgets(prev =>
+                      prev.map(w => w.id === id ? { ...w, ...updates } : w)
+                    );
+                  }}
+                  onDeleteWidget={(id) => {
+                    setTextWidgets(prev => prev.filter(w => w.id !== id));
+                  }}
+                  onReorderWidget={(id, direction) => {
+                    setTextWidgets(prev => {
+                      const index = prev.findIndex((w) => w.id === id);
+                      if (index === -1) return prev;
 
-                        const reordered = [...prev];
-                        const [item] = reordered.splice(index, 1);
+                      const reordered = [...prev];
+                      const [item] = reordered.splice(index, 1);
 
-                        if (direction === "front") {
-                          reordered.push(item);
-                        } else {
-                          reordered.unshift(item);
-                        }
+                      if (direction === "front") {
+                        reordered.push(item);
+                      } else {
+                        reordered.unshift(item);
+                      }
 
-                        return reordered;
-                      });
-                    }}
-                    onColorChange={(id, color) => {
-                      setTextWidgets(prev =>
-                        prev.map(w => w.id === id ? { ...w, fill: color } : w)
-                      );
-                    }}
-                  />
-                </div>
+                      return reordered;
+                    });
+                  }}
+                  onColorChange={(id, color) => {
+                    setTextWidgets(prev =>
+                      prev.map(w => w.id === id ? { ...w, fill: color } : w)
+                    );
+                  }}
+                />
               </div>
             ) : (
               <p className="text-gray-400 text-sm">Select an image on canvas</p>
