@@ -584,11 +584,38 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   // Image panel state - simple approach with page state
   const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [panelWidth, setPanelWidth] = useState(600); // Default width in pixels
+  const [isResizingPanel, setIsResizingPanel] = useState(false);
 
   // Debug logging
   useEffect(() => {
     console.log("selectedImageUrl changed:", selectedImageUrl);
   }, [selectedImageUrl]);
+
+  // Handle panel resize
+  useEffect(() => {
+    if (!isResizingPanel) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = window.innerWidth - e.clientX;
+      // Min width 300px, max width 80% of screen
+      const minWidth = 300;
+      const maxWidth = window.innerWidth * 0.8;
+      setPanelWidth(Math.max(minWidth, Math.min(maxWidth, newWidth)));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingPanel(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingPanel]);
 
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
@@ -772,7 +799,20 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
       {/* Right Image Inspection Panel */}
       {isImagePanelOpen && (
-        <div className="fixed right-0 top-0 bottom-0 w-[33vw] bg-white shadow-2xl z-50 flex">
+        <div
+          className="fixed right-0 top-0 bottom-0 bg-white shadow-2xl z-50 flex"
+          style={{ width: `${panelWidth}px` }}
+        >
+          {/* Resize Handle */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500 transition-colors"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setIsResizingPanel(true);
+            }}
+            style={{ background: isResizingPanel ? '#3b82f6' : 'transparent' }}
+          />
+
           {/* Close button */}
           <button
             onClick={() => setIsImagePanelOpen(false)}
