@@ -29,6 +29,7 @@ import {
   type CanvasState,
   type Color,
   LayerType,
+  type ImageLayer,
   type Point,
   type Side,
   type XYWH,
@@ -55,6 +56,7 @@ type CanvasProps = {
 
 export const Canvas = ({ boardId }: CanvasProps) => {
   const layerIds = useStorage((root) => root.layerIds);
+  const layers = useStorage((root) => root.layers);
 
   const pencilDraft = useSelf((me) => me.presence.pencilDraft);
   const [canvasState, setCanvasState] = useState<CanvasState>({
@@ -584,29 +586,24 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
   // Get currently selected layer (for image panel)
   const selection = useSelf((me) => me.presence.selection);
-  const selectedImageLayer = useStorage((root) => {
+  const selectedImageLayer = useMemo<ImageLayer | null>(() => {
     if (!isImagePanelOpen) {
       return null;
     }
-    if (!selection || selection.length !== 1) {
-      return null;
-    }
-    const layer = root.layers.get(selection[0]);
-    if (!layer) {
-      console.log("No layer found for selection:", selection[0]);
+
+    if (!selection || selection.length !== 1 || !layers) {
       return null;
     }
 
-    console.log("Selected layer type:", layer.type, "has imageUrl:", 'imageUrl' in layer);
+    const layerId = selection[0];
+    const layer = layers.get(layerId);
 
-    // Check if it's an Image layer with imageUrl
-    if (layer.type === LayerType.Image && 'imageUrl' in layer) {
-      console.log("Image layer found with URL:", (layer as any).imageUrl);
-      return layer as any;
+    if (layer?.type === LayerType.Image && "imageUrl" in layer) {
+      return layer as ImageLayer;
     }
-    console.log("Layer is not an Image type, type is:", layer.type);
+
     return null;
-  });
+  }, [isImagePanelOpen, selection, layers]);
 
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
