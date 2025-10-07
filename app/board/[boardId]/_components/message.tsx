@@ -128,15 +128,16 @@ export const Message = ({
       console.log("📸 Cover generated!", eventData.event);
 
       // Update with the array of 4 individual images
-      if (eventData.event.imageUrls && eventData.event.imageUrls.length > 0) {
-        setGeneratedImages(eventData.event.imageUrls); // Array of 4 images
+      if ('imageUrls' in eventData.event && eventData.event.imageUrls && eventData.event.imageUrls.length > 0) {
+        const imageUrls = eventData.event.imageUrls;
+        setGeneratedImages(imageUrls); // Array of 4 images
         setSelectedImage(0); // Auto-select first image
         setIsGenerating(false);
 
         // Load images to get their aspect ratios
         const loadImageAspectRatios = async () => {
           const ratios = await Promise.all(
-            eventData.event.imageUrls.map((url: string) => {
+            imageUrls.map((url: string) => {
               return new Promise<number>((resolve) => {
                 const img = new Image();
                 img.onload = () => {
