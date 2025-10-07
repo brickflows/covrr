@@ -596,9 +596,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     y: number;
     width: number;
     height: number;
-    fontSize: number;
-    color: string;
-    fontFamily: string;
+    fill: Color;
   }>>([]);
 
   // Debug logging
@@ -857,6 +855,11 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                     onDeleteWidget={(id) => {
                       setTextWidgets(prev => prev.filter(w => w.id !== id));
                     }}
+                    onColorChange={(id, color) => {
+                      setTextWidgets(prev =>
+                        prev.map(w => w.id === id ? { ...w, fill: color } : w)
+                      );
+                    }}
                     containerWidth={800}
                     containerHeight={600}
                   />
@@ -889,9 +892,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                     y: 50,
                     width: 250,
                     height: 80,
-                    fontSize: 32,
-                    color: "#000000",
-                    fontFamily: "Arial",
+                    fill: { r: 0, g: 0, b: 0 },
                   };
                   setTextWidgets(prev => [...prev, newWidget]);
                 }}
@@ -915,9 +916,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                       y: 50,
                       width: 300,
                       height: 100,
-                      fontSize: 48,
-                      color: "#000000",
-                      fontFamily: "Arial",
+                      fill: { r: 0, g: 0, b: 0 },
                     };
                     setTextWidgets(prev => [...prev, newWidget]);
                   }}
@@ -935,9 +934,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                       y: 50,
                       width: 250,
                       height: 60,
-                      fontSize: 28,
-                      color: "#000000",
-                      fontFamily: "Arial",
+                      fill: { r: 0, g: 0, b: 0 },
                     };
                     setTextWidgets(prev => [...prev, newWidget]);
                   }}
@@ -955,9 +952,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                       y: 50,
                       width: 220,
                       height: 50,
-                      fontSize: 16,
-                      color: "#000000",
-                      fontFamily: "Arial",
+                      fill: { r: 0, g: 0, b: 0 },
                     };
                     setTextWidgets(prev => [...prev, newWidget]);
                   }}
@@ -982,9 +977,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                       y: 50,
                       width: 150,
                       height: 80,
-                      fontSize: 36,
-                      color: "#000000",
-                      fontFamily: "Impact",
+                      fill: { r: 0, g: 0, b: 0 },
                     };
                     setTextWidgets(prev => [...prev, newWidget]);
                   }}
@@ -1006,9 +999,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                       y: 50,
                       width: 150,
                       height: 80,
-                      fontSize: 32,
-                      color: "#7c3aed",
-                      fontFamily: "Georgia",
+                      fill: { r: 124, g: 58, b: 237 },
                     };
                     setTextWidgets(prev => [...prev, newWidget]);
                   }}
@@ -1030,9 +1021,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                       y: 50,
                       width: 150,
                       height: 80,
-                      fontSize: 28,
-                      color: "#000000",
-                      fontFamily: "Georgia",
+                      fill: { r: 0, g: 0, b: 0 },
                     };
                     setTextWidgets(prev => [...prev, newWidget]);
                   }}
@@ -1054,9 +1043,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                       y: 50,
                       width: 150,
                       height: 80,
-                      fontSize: 32,
-                      color: "#3b82f6",
-                      fontFamily: "Courier New",
+                      fill: { r: 59, g: 130, b: 246 },
                     };
                     setTextWidgets(prev => [...prev, newWidget]);
                   }}
