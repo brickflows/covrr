@@ -46,6 +46,7 @@ import { SelectionTools } from "./selection-tools";
 import { Toolbar } from "./toolbar";
 import { ZoomControls } from "./zoom-controls";
 import { BookDetailsPopover } from "./book-details-popover";
+import { TextWidgetEditor } from "./text-widget-editor";
 import { X, Type, ImageIcon } from "lucide-react";
 
 const MAX_LAYERS = 100;
@@ -587,6 +588,19 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const [panelWidth, setPanelWidth] = useState(600); // Default width in pixels
   const [isResizingPanel, setIsResizingPanel] = useState(false);
 
+  // Text widgets state
+  const [textWidgets, setTextWidgets] = useState<Array<{
+    id: string;
+    content: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    fontSize: number;
+    color: string;
+    fontFamily: string;
+  }>>([]);
+
   // Debug logging
   useEffect(() => {
     console.log("selectedImageUrl changed:", selectedImageUrl);
@@ -821,38 +835,142 @@ export const Canvas = ({ boardId }: CanvasProps) => {
             <X className="w-5 h-5" />
           </button>
 
-          {/* Section 1: Image Display */}
+          {/* Section 1: Image Display with Text Widgets */}
           <div className="relative flex-1 flex items-center justify-center bg-gray-50 border-r overflow-hidden">
             {selectedImageUrl ? (
-              <div className="w-full h-full flex items-center justify-center p-4">
+              <div className="relative w-full h-full flex items-center justify-center p-4">
                 <img
                   src={selectedImageUrl}
                   alt=""
                   className="w-full h-full object-contain"
+                  id="image-preview"
                 />
+                {/* Text Widget Overlay */}
+                <div className="absolute inset-0 m-4">
+                  <TextWidgetEditor
+                    widgets={textWidgets}
+                    onUpdateWidget={(id, updates) => {
+                      setTextWidgets(prev =>
+                        prev.map(w => w.id === id ? { ...w, ...updates } : w)
+                      );
+                    }}
+                    onDeleteWidget={(id) => {
+                      setTextWidgets(prev => prev.filter(w => w.id !== id));
+                    }}
+                    containerWidth={800}
+                    containerHeight={600}
+                  />
+                </div>
               </div>
             ) : (
               <p className="text-gray-400 text-sm">Select an image on canvas</p>
             )}
-
-            {/* Navigation Buttons */}
-            <div className="absolute top-1/2 -translate-y-1/2 left-2 flex flex-col gap-y-4">
-              <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
-                <Type className="w-5 h-5" />
-              </button>
-              <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
-                <div className="w-5 h-5 bg-orange-500 rounded-full" />
-              </button>
-              <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
-                <ImageIcon className="w-5 h-5" />
-              </button>
-            </div>
           </div>
 
           {/* Section 2: Text & Controls */}
-          <div className="w-64 bg-white p-4 flex flex-col">
-            <h3 className="font-semibold mb-4">Controls</h3>
-            <p className="text-sm text-gray-500">Text editing controls will appear here</p>
+          <div className="w-64 bg-white p-4 flex flex-col gap-4 overflow-y-auto">
+            <h3 className="font-semibold">Text Controls</h3>
+
+            {/* Add Text Button */}
+            <button
+              onClick={() => {
+                const newWidget = {
+                  id: nanoid(),
+                  content: "New Text",
+                  x: 50,
+                  y: 50,
+                  width: 200,
+                  height: 60,
+                  fontSize: 24,
+                  color: "#000000",
+                  fontFamily: "Arial",
+                };
+                setTextWidgets(prev => [...prev, newWidget]);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <Type className="w-4 h-4" />
+              Add Text
+            </button>
+
+            {/* Text Style Controls */}
+            {textWidgets.length > 0 && (
+              <>
+                <div className="border-t pt-4">
+                  <label className="block text-sm font-medium mb-2">Font Size</label>
+                  <input
+                    type="range"
+                    min="12"
+                    max="72"
+                    defaultValue="24"
+                    onChange={(e) => {
+                      const lastWidget = textWidgets[textWidgets.length - 1];
+                      if (lastWidget) {
+                        setTextWidgets(prev =>
+                          prev.map((w, i) =>
+                            i === prev.length - 1
+                              ? { ...w, fontSize: parseInt(e.target.value) }
+                              : w
+                          )
+                        );
+                      }
+                    }}
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Text Color</label>
+                  <input
+                    type="color"
+                    defaultValue="#000000"
+                    onChange={(e) => {
+                      const lastWidget = textWidgets[textWidgets.length - 1];
+                      if (lastWidget) {
+                        setTextWidgets(prev =>
+                          prev.map((w, i) =>
+                            i === prev.length - 1
+                              ? { ...w, color: e.target.value }
+                              : w
+                          )
+                        );
+                      }
+                    }}
+                    className="w-full h-10 rounded cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Font Family</label>
+                  <select
+                    defaultValue="Arial"
+                    onChange={(e) => {
+                      const lastWidget = textWidgets[textWidgets.length - 1];
+                      if (lastWidget) {
+                        setTextWidgets(prev =>
+                          prev.map((w, i) =>
+                            i === prev.length - 1
+                              ? { ...w, fontFamily: e.target.value }
+                              : w
+                          )
+                        );
+                      }
+                    }}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  >
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            <div className="text-xs text-gray-500 mt-auto">
+              {textWidgets.length} text widget(s)
+            </div>
           </div>
         </div>
       )}
