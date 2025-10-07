@@ -855,13 +855,28 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                     onDeleteWidget={(id) => {
                       setTextWidgets(prev => prev.filter(w => w.id !== id));
                     }}
+                    onReorderWidget={(id, direction) => {
+                      setTextWidgets(prev => {
+                        const index = prev.findIndex((w) => w.id === id);
+                        if (index === -1) return prev;
+
+                        const reordered = [...prev];
+                        const [item] = reordered.splice(index, 1);
+
+                        if (direction === "front") {
+                          reordered.push(item);
+                        } else {
+                          reordered.unshift(item);
+                        }
+
+                        return reordered;
+                      });
+                    }}
                     onColorChange={(id, color) => {
                       setTextWidgets(prev =>
                         prev.map(w => w.id === id ? { ...w, fill: color } : w)
                       );
                     }}
-                    containerWidth={800}
-                    containerHeight={600}
                   />
                 </div>
               </div>

@@ -4,11 +4,11 @@ import React, { useState } from "react";
 import { Rnd } from "react-rnd";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 import { Kalam } from "next/font/google";
-import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/hint";
 import { BringToFront, SendToBack, Trash2 } from "lucide-react";
 import { cn, colorToCSS } from "@/lib/utils";
 import type { Color } from "@/types/canvas";
+import { ColorPicker } from "./color-picker";
 
 const font = Kalam({
   subsets: ["latin"],
@@ -29,9 +29,8 @@ type TextWidgetEditorProps = {
   widgets: TextWidget[];
   onUpdateWidget: (id: string, updates: Partial<TextWidget>) => void;
   onDeleteWidget: (id: string) => void;
+  onReorderWidget: (id: string, direction: "front" | "back") => void;
   onColorChange: (id: string, color: Color) => void;
-  containerWidth: number;
-  containerHeight: number;
 };
 
 const calculateFontSize = (width: number, height: number) => {
@@ -47,9 +46,8 @@ export const TextWidgetEditor = ({
   widgets,
   onUpdateWidget,
   onDeleteWidget,
+  onReorderWidget,
   onColorChange,
-  containerWidth,
-  containerHeight,
 }: TextWidgetEditorProps) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -108,42 +106,39 @@ export const TextWidgetEditor = ({
                   transform: `translate(calc(${widget.x}px - 50%), calc(${widget.y - 16}px - 100%))`,
                 }}
               >
-                <div className="flex items-center gap-x-0.5">
+                <ColorPicker onChange={(color) => onColorChange(widget.id, color)} />
+
+                <div className="flex flex-col gap-y-0.5">
                   <Hint label="Bring to front">
-                    <Button variant="board" size="icon">
+                    <button
+                      type="button"
+                      onClick={() => onReorderWidget(widget.id, "front")}
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-blue-500/20 hover:text-blue-800 h-10 w-10"
+                    >
                       <BringToFront />
-                    </Button>
+                    </button>
                   </Hint>
-                  <Hint label="Send to back">
-                    <Button variant="board" size="icon">
+                  <Hint label="Send to back" side="bottom">
+                    <button
+                      type="button"
+                      onClick={() => onReorderWidget(widget.id, "back")}
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-blue-500/20 hover:text-blue-800 h-10 w-10"
+                    >
                       <SendToBack />
-                    </Button>
+                    </button>
                   </Hint>
                 </div>
+
                 <div className="flex items-center pl-2 ml-2 border-l border-neutral-200">
                   <Hint label="Delete">
-                    <Button
-                      variant="board"
-                      size="icon"
+                    <button
+                      type="button"
                       onClick={() => onDeleteWidget(widget.id)}
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-blue-500/20 hover:text-blue-800 h-10 w-10"
                     >
                       <Trash2 />
-                    </Button>
+                    </button>
                   </Hint>
-                </div>
-                <div className="flex items-center pl-2 ml-2 border-l border-neutral-200">
-                  <input
-                    type="color"
-                    value={colorToCSS(widget.fill)}
-                    onChange={(e) => {
-                      const hex = e.target.value;
-                      const r = parseInt(hex.slice(1, 3), 16);
-                      const g = parseInt(hex.slice(3, 5), 16);
-                      const b = parseInt(hex.slice(5, 7), 16);
-                      onColorChange(widget.id, { r, g, b });
-                    }}
-                    className="w-8 h-8 cursor-pointer border-none"
-                  />
                 </div>
               </div>
             )}
