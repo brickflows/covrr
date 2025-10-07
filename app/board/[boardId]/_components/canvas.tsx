@@ -605,7 +605,15 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     width: number;
     height: number;
     fill: Color;
+    fontSize?: number;
+    fontWeight?: number;
+    fontFamily?: string;
+    letterSpacing?: number;
+    lineHeight?: number;
+    textAlign?: 'left' | 'center' | 'right';
   }>>([]);
+
+  const [selectedTextWidgetId, setSelectedTextWidgetId] = useState<string | null>(null);
 
   // Handle window resize to keep panel responsive
   useEffect(() => {
@@ -908,19 +916,10 @@ export const Canvas = ({ boardId }: CanvasProps) => {
             )}
           </div>
 
-          {/* Section 2: Text & Controls - Canva Style */}
+          {/* Section 2: Text & Controls */}
           <div className="bg-white flex flex-col overflow-y-auto" style={{ width: '280px' }}>
-            {/* Search Fonts */}
-            <div className="p-4 border-b">
-              <input
-                type="text"
-                placeholder="Search fonts and combinations"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
-              />
-            </div>
-
             {/* Add Text Widget Button */}
-            <div className="p-4">
+            <div className="p-4 border-b">
               <button
                 onClick={() => {
                   const newWidget = {
@@ -931,19 +930,279 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                     width: 200,
                     height: 100,
                     fill: { r: 0, g: 0, b: 0 },
+                    fontSize: 32,
+                    fontWeight: 400,
+                    fontFamily: 'Arial',
+                    letterSpacing: 0,
+                    lineHeight: 1.2,
+                    textAlign: 'center' as const,
                   };
                   setTextWidgets(prev => [...prev, newWidget]);
+                  setSelectedTextWidgetId(newWidget.id);
                 }}
                 disabled={!selectedImageUrl}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                Add Text
+                + Add Text
               </button>
             </div>
 
+            {/* Default Text Styles */}
+            <div className="px-4 py-3">
+              <h3 className="text-xs font-semibold text-gray-600 mb-3">Default text styles</h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "Add a heading",
+                      x: 50,
+                      y: 50,
+                      width: 280,
+                      height: 80,
+                      fill: { r: 0, g: 0, b: 0 },
+                      fontSize: 48,
+                      fontWeight: 700,
+                      fontFamily: 'Arial',
+                      letterSpacing: 0,
+                      lineHeight: 1.2,
+                      textAlign: 'center' as const,
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                    setSelectedTextWidgetId(newWidget.id);
+                  }}
+                  disabled={!selectedImageUrl}
+                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors disabled:opacity-50"
+                >
+                  <div className="text-2xl font-bold">Add a heading</div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "Add a subheading",
+                      x: 50,
+                      y: 50,
+                      width: 240,
+                      height: 60,
+                      fill: { r: 0, g: 0, b: 0 },
+                      fontSize: 32,
+                      fontWeight: 600,
+                      fontFamily: 'Arial',
+                      letterSpacing: 0,
+                      lineHeight: 1.2,
+                      textAlign: 'center' as const,
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                    setSelectedTextWidgetId(newWidget.id);
+                  }}
+                  disabled={!selectedImageUrl}
+                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors disabled:opacity-50"
+                >
+                  <div className="text-lg font-semibold">Add a subheading</div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "Add a little bit of body text",
+                      x: 50,
+                      y: 50,
+                      width: 200,
+                      height: 50,
+                      fill: { r: 0, g: 0, b: 0 },
+                      fontSize: 20,
+                      fontWeight: 400,
+                      fontFamily: 'Arial',
+                      letterSpacing: 0,
+                      lineHeight: 1.4,
+                      textAlign: 'center' as const,
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                    setSelectedTextWidgetId(newWidget.id);
+                  }}
+                  disabled={!selectedImageUrl}
+                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors disabled:opacity-50"
+                >
+                  <div className="text-sm">Add a little bit of body text</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Text Properties Editor - Only show when a widget is selected */}
+            {selectedTextWidgetId && textWidgets.find(w => w.id === selectedTextWidgetId) && (
+              <div className="px-4 py-3 border-t">
+                <h3 className="text-xs font-semibold text-gray-600 mb-3">Text Properties</h3>
+
+                {(() => {
+                  const widget = textWidgets.find(w => w.id === selectedTextWidgetId);
+                  if (!widget) return null;
+
+                  return (
+                    <div className="space-y-4">
+                      {/* Font Family */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Font Family</label>
+                        <select
+                          value={widget.fontFamily || 'Arial'}
+                          onChange={(e) => {
+                            setTextWidgets(prev =>
+                              prev.map(w => w.id === selectedTextWidgetId ? { ...w, fontFamily: e.target.value } : w)
+                            );
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        >
+                          <option value="Arial">Arial</option>
+                          <option value="Helvetica">Helvetica</option>
+                          <option value="Times New Roman">Times New Roman</option>
+                          <option value="Georgia">Georgia</option>
+                          <option value="Verdana">Verdana</option>
+                          <option value="Impact">Impact</option>
+                          <option value="Comic Sans MS">Comic Sans MS</option>
+                        </select>
+                      </div>
+
+                      {/* Font Size */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Font Size: {widget.fontSize || 32}px
+                        </label>
+                        <input
+                          type="range"
+                          min="12"
+                          max="120"
+                          value={widget.fontSize || 32}
+                          onChange={(e) => {
+                            setTextWidgets(prev =>
+                              prev.map(w => w.id === selectedTextWidgetId ? { ...w, fontSize: Number(e.target.value) } : w)
+                            );
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Font Weight */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Font Weight</label>
+                        <select
+                          value={widget.fontWeight || 400}
+                          onChange={(e) => {
+                            setTextWidgets(prev =>
+                              prev.map(w => w.id === selectedTextWidgetId ? { ...w, fontWeight: Number(e.target.value) } : w)
+                            );
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        >
+                          <option value={100}>Thin (100)</option>
+                          <option value={300}>Light (300)</option>
+                          <option value={400}>Regular (400)</option>
+                          <option value={500}>Medium (500)</option>
+                          <option value={600}>Semi Bold (600)</option>
+                          <option value={700}>Bold (700)</option>
+                          <option value={800}>Extra Bold (800)</option>
+                          <option value={900}>Black (900)</option>
+                        </select>
+                      </div>
+
+                      {/* Text Align */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Text Align</label>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setTextWidgets(prev =>
+                                prev.map(w => w.id === selectedTextWidgetId ? { ...w, textAlign: 'left' as const } : w)
+                              );
+                            }}
+                            className={`flex-1 py-2 px-3 rounded border text-xs ${
+                              widget.textAlign === 'left'
+                                ? 'bg-purple-600 text-white border-purple-600'
+                                : 'bg-white text-gray-700 border-gray-300'
+                            }`}
+                          >
+                            Left
+                          </button>
+                          <button
+                            onClick={() => {
+                              setTextWidgets(prev =>
+                                prev.map(w => w.id === selectedTextWidgetId ? { ...w, textAlign: 'center' as const } : w)
+                              );
+                            }}
+                            className={`flex-1 py-2 px-3 rounded border text-xs ${
+                              widget.textAlign === 'center'
+                                ? 'bg-purple-600 text-white border-purple-600'
+                                : 'bg-white text-gray-700 border-gray-300'
+                            }`}
+                          >
+                            Center
+                          </button>
+                          <button
+                            onClick={() => {
+                              setTextWidgets(prev =>
+                                prev.map(w => w.id === selectedTextWidgetId ? { ...w, textAlign: 'right' as const } : w)
+                              );
+                            }}
+                            className={`flex-1 py-2 px-3 rounded border text-xs ${
+                              widget.textAlign === 'right'
+                                ? 'bg-purple-600 text-white border-purple-600'
+                                : 'bg-white text-gray-700 border-gray-300'
+                            }`}
+                          >
+                            Right
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Letter Spacing */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Letter Spacing: {widget.letterSpacing || 0}px
+                        </label>
+                        <input
+                          type="range"
+                          min="-5"
+                          max="20"
+                          step="0.5"
+                          value={widget.letterSpacing || 0}
+                          onChange={(e) => {
+                            setTextWidgets(prev =>
+                              prev.map(w => w.id === selectedTextWidgetId ? { ...w, letterSpacing: Number(e.target.value) } : w)
+                            );
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Line Height */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Line Height: {widget.lineHeight || 1.2}
+                        </label>
+                        <input
+                          type="range"
+                          min="0.8"
+                          max="3"
+                          step="0.1"
+                          value={widget.lineHeight || 1.2}
+                          onChange={(e) => {
+                            setTextWidgets(prev =>
+                              prev.map(w => w.id === selectedTextWidgetId ? { ...w, lineHeight: Number(e.target.value) } : w)
+                            );
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
             {/* Text Widget Count */}
             {textWidgets.length > 0 && (
-              <div className="px-4 pb-4 text-xs text-gray-500">
+              <div className="px-4 py-3 text-xs text-gray-500 border-t">
                 {textWidgets.length} text widget(s)
               </div>
             )}
