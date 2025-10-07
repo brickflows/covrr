@@ -213,7 +213,7 @@ export const Message = ({
 
   // Convert image to Image layer for text editing
   const convertToImageLayer = useMutation(
-    ({ storage }, imageUrl: string, imageIndex: number) => {
+    ({ storage, setMyPresence }, imageUrl: string, imageIndex: number) => {
       const liveLayers = storage.get("layers");
       const liveLayerIds = storage.get("layerIds");
 
@@ -226,7 +226,7 @@ export const Message = ({
         return sum;
       }, 0);
 
-      // Create new Image layer
+      // Create new Image layer ONLY
       const layerId = nanoid();
       const layer = new LiveObject({
         type: LayerType.Image,
@@ -243,7 +243,10 @@ export const Message = ({
       liveLayerIds.push(layerId);
       liveLayers.set(layerId, layer);
 
-      toast.success("Image converted! Click to edit text.");
+      // Select the new layer to open editor
+      setMyPresence({ selection: [layerId] }, { addToHistory: true });
+
+      toast.success("Image ready for text editing!");
       return layerId;
     },
     [x, y, width, height, imageSizes, imageVisibility]

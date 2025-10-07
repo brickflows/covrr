@@ -45,7 +45,6 @@ import { Toolbar } from "./toolbar";
 import { ZoomControls } from "./zoom-controls";
 import { BookDetailsPopover } from "./book-details-popover";
 import { ImageEditorPanel } from "./image-editor-panel";
-import { ImageUploadDialog } from "./image-upload-dialog";
 import { X } from "lucide-react";
 
 // Wrapper component for Image Editor Panel to avoid hook issues
@@ -86,8 +85,6 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [editingImageLayerId, setEditingImageLayerId] = useState<string | null>(null);
-  const [showImageUpload, setShowImageUpload] = useState(false);
-  const [pendingImagePosition, setPendingImagePosition] = useState<Point | null>(null);
 
   useDisableScrollBounce();
   const history = useHistory();
@@ -502,14 +499,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       } else if (canvasState.mode === CanvasMode.Pencil) {
         insertPath();
       } else if (canvasState.mode === CanvasMode.Inserting) {
-        // For Image layer, show upload dialog first
-        if (canvasState.layerType === LayerType.Image) {
-          setPendingImagePosition(point);
-          setShowImageUpload(true);
-          setCanvasState({ mode: CanvasMode.None });
-        } else {
-          insertLayer(canvasState.layerType, point);
-        }
+        insertLayer(canvasState.layerType, point);
       } else if (canvasState.mode === CanvasMode.Connecting) {
         // Find which layer we're over
         const layers = storage.get("layers");
@@ -631,19 +621,6 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
   const handleImageLayerClick = useCallback((layerId: string) => {
     setEditingImageLayerId(layerId);
-  }, []);
-
-  const handleImageUploadSubmit = useCallback((imageUrl: string) => {
-    if (pendingImagePosition) {
-      insertLayer(LayerType.Image, pendingImagePosition, imageUrl);
-      setPendingImagePosition(null);
-    }
-    setShowImageUpload(false);
-  }, [pendingImagePosition, insertLayer]);
-
-  const handleImageUploadCancel = useCallback(() => {
-    setShowImageUpload(false);
-    setPendingImagePosition(null);
   }, []);
 
   const layerIdsToColorSelection = useMemo(() => {
@@ -799,14 +776,6 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
       {/* Image Editor Panel */}
       {editingImageLayerId && <ImageEditorPanelWrapper layerId={editingImageLayerId} onClose={() => setEditingImageLayerId(null)} />}
-
-      {/* Image Upload Dialog */}
-      {showImageUpload && (
-        <ImageUploadDialog
-          onSubmit={handleImageUploadSubmit}
-          onCancel={handleImageUploadCancel}
-        />
-      )}
     </main>
   );
 };
