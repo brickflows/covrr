@@ -54,6 +54,21 @@ export const Message = ({
   // Fetch board data to get book details
   const boardData = useQuery(api.board.get, { id: boardId as Id<"boards"> });
 
+  // Fetch saved images from Convex (for persistence after page refresh)
+  const savedConvexImages = useQuery(api.coverGenerations.getMessageImages, {
+    boardId: boardId,
+    messageId: id
+  });
+
+  // Restore images from Convex on mount
+  useEffect(() => {
+    if (savedConvexImages?.imageUrls && savedConvexImages.imageUrls.length > 0) {
+      console.log("🔄 Restoring images from Convex:", savedConvexImages.imageUrls.length);
+      setGeneratedImages(savedConvexImages.imageUrls);
+      setSelectedImage(0); // Auto-select first image
+    }
+  }, [savedConvexImages]);
+
   // Count incoming connections to this message node
   const incomingConnectionCount = useStorage((root) => {
     const layers = root.layers;
