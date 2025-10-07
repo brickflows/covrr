@@ -13,6 +13,12 @@ type TextWidget = {
   width: number;
   height: number;
   fill: Color;
+  fontSize?: number;
+  fontWeight?: number;
+  fontFamily?: string;
+  letterSpacing?: number;
+  lineHeight?: number;
+  textAlign?: 'left' | 'center' | 'right';
 };
 
 type TextWidgetEditorProps = {
@@ -348,12 +354,14 @@ export const TextWidgetEditor = ({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  textAlign: "center",
+                  textAlign: widget.textAlign || "center",
                   outline: "none",
-                  fontSize: `${fontSize}px`,
+                  fontSize: widget.fontSize ? `${widget.fontSize}px` : `${fontSize}px`,
                   color: colorToCSS(widget.fill),
-                  fontFamily: "'Kalam', cursive",
-                  fontWeight: 400,
+                  fontFamily: widget.fontFamily || "'Kalam', cursive",
+                  fontWeight: widget.fontWeight || 400,
+                  letterSpacing: widget.letterSpacing ? `${widget.letterSpacing}px` : "0px",
+                  lineHeight: widget.lineHeight || 1.2,
                   textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
                   userSelect: isEditing ? "text" : "none",
                   pointerEvents: isEditing ? "auto" : "none",
