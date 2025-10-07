@@ -45,6 +45,7 @@ import { Toolbar } from "./toolbar";
 import { ZoomControls } from "./zoom-controls";
 import { BookDetailsPopover } from "./book-details-popover";
 import { TextWidgetEditor } from "./text-widget-editor";
+import { FontSelector } from "./font-selector";
 import { X } from "lucide-react";
 
 const MAX_LAYERS = 100;
@@ -909,6 +910,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                       return reordered;
                     });
                   }}
+                  onDuplicateWidget={(widget) => {
+                    setTextWidgets(prev => [...prev, widget]);
+                  }}
                   onColorChange={(id, color) => {
                     setTextWidgets(prev =>
                       prev.map(w => w.id === id ? { ...w, fill: color } : w)
@@ -956,92 +960,121 @@ export const Canvas = ({ boardId }: CanvasProps) => {
               </button>
             </div>
 
-            {/* Default Text Styles */}
-            <div className="px-4 py-3">
-              <h3 className="text-xs font-semibold text-gray-600 mb-3">Default text styles</h3>
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "Add a heading",
-                      x: 50,
-                      y: 50,
-                      width: 280,
-                      height: 80,
-                      fill: { r: 0, g: 0, b: 0 },
-                      fontSize: 48,
-                      fontWeight: 700,
-                      fontFamily: 'Arial',
-                      letterSpacing: 0,
-                      lineHeight: 1.2,
-                      textAlign: 'center' as const,
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                    setSelectedTextWidgetId(newWidget.id);
-                  }}
-                  disabled={!selectedImageUrl}
-                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors disabled:opacity-50"
-                >
-                  <div className="text-2xl font-bold">Add a heading</div>
-                </button>
+            {/* Show Font Selector when no widget is selected, otherwise show text properties */}
+            {!selectedTextWidgetId ? (
+              <>
+                {/* Default Text Styles */}
+                <div className="px-4 py-3">
+                  <h3 className="text-xs font-semibold text-gray-600 mb-3">Default text styles</h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        const newWidget = {
+                          id: nanoid(),
+                          content: "Add a heading",
+                          x: 50,
+                          y: 50,
+                          width: 280,
+                          height: 80,
+                          fill: { r: 0, g: 0, b: 0 },
+                          fontSize: 48,
+                          fontWeight: 700,
+                          fontFamily: 'Arial',
+                          letterSpacing: 0,
+                          lineHeight: 1.2,
+                          textAlign: 'center' as const,
+                        };
+                        setTextWidgets(prev => [...prev, newWidget]);
+                        setSelectedTextWidgetId(newWidget.id);
+                      }}
+                      disabled={!selectedImageUrl}
+                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors disabled:opacity-50"
+                    >
+                      <div className="text-2xl font-bold">Add a heading</div>
+                    </button>
 
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "Add a subheading",
-                      x: 50,
-                      y: 50,
-                      width: 240,
-                      height: 60,
-                      fill: { r: 0, g: 0, b: 0 },
-                      fontSize: 32,
-                      fontWeight: 600,
-                      fontFamily: 'Arial',
-                      letterSpacing: 0,
-                      lineHeight: 1.2,
-                      textAlign: 'center' as const,
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                    setSelectedTextWidgetId(newWidget.id);
-                  }}
-                  disabled={!selectedImageUrl}
-                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors disabled:opacity-50"
-                >
-                  <div className="text-lg font-semibold">Add a subheading</div>
-                </button>
+                    <button
+                      onClick={() => {
+                        const newWidget = {
+                          id: nanoid(),
+                          content: "Add a subheading",
+                          x: 50,
+                          y: 50,
+                          width: 240,
+                          height: 60,
+                          fill: { r: 0, g: 0, b: 0 },
+                          fontSize: 32,
+                          fontWeight: 600,
+                          fontFamily: 'Arial',
+                          letterSpacing: 0,
+                          lineHeight: 1.2,
+                          textAlign: 'center' as const,
+                        };
+                        setTextWidgets(prev => [...prev, newWidget]);
+                        setSelectedTextWidgetId(newWidget.id);
+                      }}
+                      disabled={!selectedImageUrl}
+                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors disabled:opacity-50"
+                    >
+                      <div className="text-lg font-semibold">Add a subheading</div>
+                    </button>
 
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "Add a little bit of body text",
-                      x: 50,
-                      y: 50,
-                      width: 200,
-                      height: 50,
-                      fill: { r: 0, g: 0, b: 0 },
-                      fontSize: 20,
-                      fontWeight: 400,
-                      fontFamily: 'Arial',
-                      letterSpacing: 0,
-                      lineHeight: 1.4,
-                      textAlign: 'center' as const,
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                    setSelectedTextWidgetId(newWidget.id);
-                  }}
-                  disabled={!selectedImageUrl}
-                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors disabled:opacity-50"
-                >
-                  <div className="text-sm">Add a little bit of body text</div>
-                </button>
-              </div>
-            </div>
+                    <button
+                      onClick={() => {
+                        const newWidget = {
+                          id: nanoid(),
+                          content: "Add a little bit of body text",
+                          x: 50,
+                          y: 50,
+                          width: 200,
+                          height: 50,
+                          fill: { r: 0, g: 0, b: 0 },
+                          fontSize: 20,
+                          fontWeight: 400,
+                          fontFamily: 'Arial',
+                          letterSpacing: 0,
+                          lineHeight: 1.4,
+                          textAlign: 'center' as const,
+                        };
+                        setTextWidgets(prev => [...prev, newWidget]);
+                        setSelectedTextWidgetId(newWidget.id);
+                      }}
+                      disabled={!selectedImageUrl}
+                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors disabled:opacity-50"
+                    >
+                      <div className="text-sm">Add a little bit of body text</div>
+                    </button>
+                  </div>
+                </div>
 
-            {/* Text Properties Editor - Only show when a widget is selected */}
-            {selectedTextWidgetId && textWidgets.find(w => w.id === selectedTextWidgetId) && (
+                {/* Font Selector */}
+                <div className="border-t flex-1 overflow-hidden">
+                  <FontSelector
+                    onFontSelect={(fontFamily) => {
+                      const newWidget = {
+                        id: nanoid(),
+                        content: "Your text here",
+                        x: 50,
+                        y: 50,
+                        width: 250,
+                        height: 80,
+                        fill: { r: 0, g: 0, b: 0 },
+                        fontSize: 36,
+                        fontWeight: 400,
+                        fontFamily: fontFamily,
+                        letterSpacing: 0,
+                        lineHeight: 1.2,
+                        textAlign: 'center' as const,
+                      };
+                      setTextWidgets(prev => [...prev, newWidget]);
+                      setSelectedTextWidgetId(newWidget.id);
+                    }}
+                  />
+                </div>
+              </>
+            ) : (
+              /* Text Properties Editor - Only show when a widget is selected */
+              textWidgets.find(w => w.id === selectedTextWidgetId) && (
               <div className="px-4 py-3 border-t">
                 <h3 className="text-xs font-semibold text-gray-600 mb-3">Text Properties</h3>
 
@@ -1223,6 +1256,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                   );
                 })()}
               </div>
+              )
             )}
 
             {/* Text Widget Count */}

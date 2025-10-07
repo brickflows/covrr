@@ -29,6 +29,7 @@ type TextWidgetEditorProps = {
   onDeleteWidget: (id: string) => void;
   onReorderWidget: (id: string, direction: "front" | "back") => void;
   onColorChange: (id: string, color: Color) => void;
+  onDuplicateWidget?: (widget: TextWidget) => void;
   onWidgetSelect?: (id: string | null) => void;
   selectedWidgetId?: string | null;
 };
@@ -57,12 +58,15 @@ export const TextWidgetEditor = ({
   onDeleteWidget,
   onReorderWidget,
   onColorChange,
+  onDuplicateWidget,
   onWidgetSelect,
   selectedWidgetId,
 }: TextWidgetEditorProps) => {
   const [selectedId, setSelectedId] = useState<string | null>(selectedWidgetId || null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
+  const [rotatingId, setRotatingId] = useState<string | null>(null);
+  const [isRotating, setIsRotating] = useState(false);
 
   // Sync with external selectedWidgetId
   useEffect(() => {
@@ -162,15 +166,30 @@ export const TextWidgetEditor = ({
           x: newX,
           y: newY,
         });
+      } else if (isRotating && rotatingId) {
+        const widget = widgets.find(w => w.id === rotatingId);
+        if (!widget) return;
+
+        // Calculate widget center position
+        const centerX = widget.x + widget.width / 2;
+        const centerY = widget.y + widget.height / 2;
+
+        // Calculate angle from center to mouse position
+        const deltaX = e.clientX - centerX;
+        const deltaY = e.clientY - centerY;
+        const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 90;
+
+        onUpdateWidget(rotatingId, { rotation: Math.round(angle) });
       }
     };
 
     const handleMouseUp = () => {
       setDragging(null);
       setResizing(null);
+      setIsRotating(false);
     };
 
-    if (dragging || resizing) {
+    if (dragging || resizing || isRotating) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
       return () => {
@@ -178,7 +197,7 @@ export const TextWidgetEditor = ({
         document.removeEventListener("mouseup", handleMouseUp);
       };
     }
-  }, [dragging, resizing, widgets, onUpdateWidget]);
+  }, [dragging, resizing, isRotating, rotatingId, widgets, onUpdateWidget]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -357,7 +376,28 @@ export const TextWidgetEditor = ({
                 dangerouslySetInnerHTML={{ __html: widget.content || "Text" }}
               />
 
-              {isSelected && !isEditing && <ResizeHandles widget={widget} />}
+              {isSelected && !isEditing && !rotatingId && <ResizeHandles widget={widget} />}
+
+              {/* Rotation Handle */}
+              {isSelected && rotatingId === widget.id && !isEditing && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: -40,
+                    transform: "translateX(-50%)",
+                    cursor: isRotating ? "grabbing" : "grab",
+                    zIndex: 10,
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    setIsRotating(true);
+                  }}
+                  className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+                >
+                  <RotateCw size={16} className="text-white" />
+                </div>
+              )}
             </div>
 
             {isSelected && !isEditing && !widget.locked && (
@@ -437,8 +477,15 @@ export const TextWidgetEditor = ({
                 <div className="flex gap-0.5 border-l pl-0.5">
                   <button
                     onClick={() => {
-                      const newWidget = { ...widget, id: `${widget.id}-copy-${Date.now()}` };
-                      onUpdateWidget(newWidget.id, newWidget);
+                      if (onDuplicateWidget) {
+                        const newWidget = {
+                          ...widget,
+                          id: `${widget.id}-copy-${Date.now()}`,
+                          x: widget.x + 20,
+                          y: widget.y + 20
+                        };
+                        onDuplicateWidget(newWidget);
+                      }
                     }}
                     className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                     title="Duplicate"
@@ -447,11 +494,12 @@ export const TextWidgetEditor = ({
                   </button>
                   <button
                     onClick={() => {
-                      const currentRotation = widget.rotation || 0;
-                      onUpdateWidget(widget.id, { rotation: (currentRotation + 45) % 360 });
+                      setRotatingId(rotatingId === widget.id ? null : widget.id);
                     }}
-                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                    title="Rotate 45°"
+                    className={`p-1.5 hover:bg-gray-100 rounded transition-colors ${
+                      rotatingId === widget.id ? 'bg-blue-100' : ''
+                    }`}
+                    title="Rotate"
                   >
                     <RotateCw size={16} />
                   </button>
