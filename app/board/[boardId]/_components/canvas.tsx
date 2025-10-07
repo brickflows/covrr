@@ -611,6 +611,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     letterSpacing?: number;
     lineHeight?: number;
     textAlign?: 'left' | 'center' | 'right';
+    locked?: boolean;
   }>>([]);
 
   const [selectedTextWidgetId, setSelectedTextWidgetId] = useState<string | null>(null);
@@ -869,12 +870,14 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           {/* Section 1: Image Display with Text Widgets */}
           <div className="relative flex-1 flex items-center justify-center bg-gray-100 overflow-hidden p-5">
             {selectedImageUrl ? (
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full pointer-events-none">
                 <img
                   src={selectedImageUrl}
                   alt=""
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain select-none"
                   id="image-preview"
+                  draggable={false}
+                  style={{ userSelect: 'none', pointerEvents: 'none' }}
                 />
                 {/* Text Widget Overlay */}
                 <TextWidgetEditor
@@ -1047,6 +1050,22 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
                   return (
                     <div className="space-y-4">
+                      {/* Text Content */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Text Content</label>
+                        <textarea
+                          value={widget.content}
+                          onChange={(e) => {
+                            setTextWidgets(prev =>
+                              prev.map(w => w.id === selectedTextWidgetId ? { ...w, content: e.target.value } : w)
+                            );
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm resize-none"
+                          rows={3}
+                          placeholder="Enter your text here..."
+                        />
+                      </div>
+
                       {/* Font Family */}
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Font Family</label>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { BringToFront, SendToBack, Trash2 } from "lucide-react";
+import { BringToFront, SendToBack, Trash2, Lock, Unlock, Palette } from "lucide-react";
 
 type Color = { r: number; g: number; b: number };
 
@@ -19,6 +19,7 @@ type TextWidget = {
   letterSpacing?: number;
   lineHeight?: number;
   textAlign?: 'left' | 'center' | 'right';
+  locked?: boolean;
 };
 
 type TextWidgetEditorProps = {
@@ -45,29 +46,6 @@ const calculateFontSize = (width: number, height: number) => {
 
 const colorToCSS = (color: Color) => `rgb(${color.r}, ${color.g}, ${color.b})`;
 
-const ColorPicker = ({ onChange }: { onChange: (color: Color) => void }) => {
-  const colors = [
-    { r: 0, g: 0, b: 0 },
-    { r: 255, g: 0, b: 0 },
-    { r: 0, g: 128, b: 255 },
-    { r: 34, g: 197, b: 94 },
-    { r: 234, g: 179, b: 8 },
-  ];
-
-  return (
-    <div className="flex gap-1 pr-2">
-      {colors.map((color, idx) => (
-        <button
-          key={idx}
-          onClick={() => onChange(color)}
-          className="w-8 h-8 rounded border-2 border-gray-300 hover:scale-110 transition-transform"
-          style={{ backgroundColor: colorToCSS(color) }}
-        />
-      ))}
-    </div>
-  );
-};
-
 type ResizeHandle =
   | "top" | "topRight" | "right" | "bottomRight"
   | "bottom" | "bottomLeft" | "left" | "topLeft" | null;
@@ -83,6 +61,7 @@ export const TextWidgetEditor = ({
 }: TextWidgetEditorProps) => {
   const [selectedId, setSelectedId] = useState<string | null>(selectedWidgetId || null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
 
   // Sync with external selectedWidgetId
   useEffect(() => {
@@ -231,7 +210,7 @@ export const TextWidgetEditor = ({
   }, [onWidgetSelect]);
 
   const handleDragStart = (e: React.MouseEvent, widget: TextWidget) => {
-    if (editingId === widget.id) return;
+    if (editingId === widget.id || widget.locked) return;
     e.stopPropagation();
     setSelectedId(widget.id);
     onWidgetSelect?.(widget.id);
@@ -245,6 +224,7 @@ export const TextWidgetEditor = ({
   };
 
   const handleResizeStart = (e: React.MouseEvent, widget: TextWidget, handle: ResizeHandle) => {
+    if (widget.locked) return;
     e.stopPropagation();
     setResizing({
       id: widget.id,
@@ -351,9 +331,7 @@ export const TextWidgetEditor = ({
                 style={{
                   width: "100%",
                   height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  display: "block",
                   textAlign: widget.textAlign || "center",
                   outline: "none",
                   fontSize: widget.fontSize ? `${widget.fontSize}px` : `${fontSize}px`,
@@ -367,6 +345,10 @@ export const TextWidgetEditor = ({
                   pointerEvents: isEditing ? "auto" : "none",
                   backgroundColor: "rgba(255, 255, 255, 0.05)",
                   borderRadius: "4px",
+                  padding: "8px",
+                  overflow: "hidden",
+                  wordWrap: "break-word",
+                  overflowWrap: "break-word",
                 }}
                 dangerouslySetInnerHTML={{ __html: widget.content || "Text" }}
               />
@@ -374,7 +356,7 @@ export const TextWidgetEditor = ({
               {isSelected && !isEditing && <ResizeHandles widget={widget} />}
             </div>
 
-            {isSelected && !isEditing && (
+            {isSelected && !isEditing && !widget.locked && (
               <div
                 style={{
                   position: "absolute",
@@ -384,36 +366,109 @@ export const TextWidgetEditor = ({
                   zIndex: 1001,
                   pointerEvents: "auto",
                 }}
-                className="p-3 rounded-xl bg-white shadow-lg border flex gap-2"
+                className="p-2 rounded-xl bg-white shadow-lg border flex gap-1"
               >
-                <ColorPicker onChange={(color) => onColorChange(widget.id, color)} />
+                {/* Color Picker Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowColorPicker(showColorPicker === widget.id ? null : widget.id)}
+                    className="p-2 hover:bg-gray-100 rounded transition-colors relative"
+                    title="Change color"
+                  >
+                    <Palette size={18} />
+                    <div
+                      className="absolute bottom-1 right-1 w-3 h-3 rounded-full border border-white"
+                      style={{ backgroundColor: colorToCSS(widget.fill) }}
+                    />
+                  </button>
 
-                <div className="flex gap-1 border-l pl-2">
+                  {/* Color Palette Dropdown */}
+                  {showColorPicker === widget.id && (
+                    <div className="absolute top-full mt-2 left-0 bg-white rounded-lg shadow-xl border p-3 z-[9999]">
+                      <div className="grid grid-cols-5 gap-2 w-[180px]">
+                        {[
+                          { r: 0, g: 0, b: 0 },
+                          { r: 255, g: 255, b: 255 },
+                          { r: 239, g: 68, b: 68 },
+                          { r: 249, g: 115, b: 22 },
+                          { r: 234, g: 179, b: 8 },
+                          { r: 34, g: 197, b: 94 },
+                          { r: 59, g: 130, b: 246 },
+                          { r: 168, g: 85, b: 247 },
+                          { r: 236, g: 72, b: 153 },
+                          { r: 148, g: 163, b: 184 },
+                        ].map((color, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              onColorChange(widget.id, color);
+                              setShowColorPicker(null);
+                            }}
+                            className="w-7 h-7 rounded border-2 border-gray-200 hover:scale-110 transition-transform"
+                            style={{ backgroundColor: colorToCSS(color) }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-1 border-l pl-1">
                   <button
                     onClick={() => onReorderWidget(widget.id, "front")}
-                    className="p-2 hover:bg-blue-100 rounded transition-colors"
+                    className="p-2 hover:bg-gray-100 rounded transition-colors"
                     title="Bring to front"
                   >
-                    <BringToFront size={20} />
+                    <BringToFront size={18} />
                   </button>
                   <button
                     onClick={() => onReorderWidget(widget.id, "back")}
-                    className="p-2 hover:bg-blue-100 rounded transition-colors"
+                    className="p-2 hover:bg-gray-100 rounded transition-colors"
                     title="Send to back"
                   >
-                    <SendToBack size={20} />
+                    <SendToBack size={18} />
                   </button>
                 </div>
 
-                <div className="flex border-l pl-2">
+                <div className="flex gap-1 border-l pl-1">
+                  <button
+                    onClick={() => onUpdateWidget(widget.id, { locked: true })}
+                    className="p-2 hover:bg-gray-100 rounded transition-colors"
+                    title="Lock"
+                  >
+                    <Lock size={18} />
+                  </button>
                   <button
                     onClick={() => onDeleteWidget(widget.id)}
                     className="p-2 hover:bg-red-100 rounded transition-colors"
                     title="Delete"
                   >
-                    <Trash2 size={20} />
+                    <Trash2 size={18} />
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Locked indicator */}
+            {widget.locked && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: widget.x + widget.width / 2,
+                  top: Math.max(widget.y - 50, 10),
+                  transform: "translateX(-50%)",
+                  zIndex: 1001,
+                  pointerEvents: "auto",
+                }}
+                className="p-2 rounded-xl bg-white shadow-lg border flex gap-1"
+              >
+                <button
+                  onClick={() => onUpdateWidget(widget.id, { locked: false })}
+                  className="p-2 hover:bg-gray-100 rounded transition-colors"
+                  title="Unlock"
+                >
+                  <Unlock size={18} />
+                </button>
               </div>
             )}
           </div>
