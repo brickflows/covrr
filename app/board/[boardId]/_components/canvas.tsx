@@ -593,14 +593,11 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       return null;
     }
 
-    const liveLayer = root.layers.get(selectedLayerId) as
-      | LiveObject<Layer>
-      | undefined;
-    if (!liveLayer) {
+    const layer = root.layers.get(selectedLayerId);
+    if (!layer) {
       return null;
     }
 
-    const layer = liveLayer.toObject();
     if (layer.type === LayerType.Image && "imageUrl" in layer) {
       return layer as ImageLayer;
     }
