@@ -1,19 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Rnd } from "react-rnd";
-import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
-import { Kalam } from "next/font/google";
-import { Hint } from "@/components/hint";
+import React, { useEffect, useRef, useState } from "react";
 import { BringToFront, SendToBack, Trash2 } from "lucide-react";
-import { cn, colorToCSS } from "@/lib/utils";
-import type { Color } from "@/types/canvas";
-import { ColorPicker } from "./color-picker";
 
-const font = Kalam({
-  subsets: ["latin"],
-  weight: ["400"],
-});
+type Color = { r: number; g: number; b: number };
 
 type TextWidget = {
   id: string;
@@ -33,14 +23,46 @@ type TextWidgetEditorProps = {
   onColorChange: (id: string, color: Color) => void;
 };
 
-const calculateFontSize = (width: number, height: number) => {
-  const maxFontSize = 96;
-  const scaleFactor = 0.5;
-  const fontSizeBasedOnHeight = height * scaleFactor;
-  const fontSizeBasedOnWidth = width * scaleFactor;
+const MIN_WIDTH = 80;
+const MIN_HEIGHT = 48;
+const MAX_FONT_SIZE = 96;
+const FONT_SCALE_FACTOR = 0.5;
+const HANDLE_SIZE = 12;
 
-  return Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth, maxFontSize);
+const calculateFontSize = (width: number, height: number) => {
+  const fontSizeBasedOnHeight = height * FONT_SCALE_FACTOR;
+  const fontSizeBasedOnWidth = width * FONT_SCALE_FACTOR;
+  return Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth, MAX_FONT_SIZE);
 };
+
+const colorToCSS = (color: Color) => `rgb(${color.r}, ${color.g}, ${color.b})`;
+
+const ColorPicker = ({ onChange }: { onChange: (color: Color) => void }) => {
+  const colors = [
+    { r: 0, g: 0, b: 0 },
+    { r: 255, g: 0, b: 0 },
+    { r: 0, g: 128, b: 255 },
+    { r: 34, g: 197, b: 94 },
+    { r: 234, g: 179, b: 8 },
+  ];
+
+  return (
+    <div className="flex gap-1 pr-2">
+      {colors.map((color, idx) => (
+        <button
+          key={idx}
+          onClick={() => onChange(color)}
+          className="w-8 h-8 rounded border-2 border-gray-300 hover:scale-110 transition-transform"
+          style={{ backgroundColor: colorToCSS(color) }}
+        />
+      ))}
+    </div>
+  );
+};
+
+type ResizeHandle =
+  | "top" | "topRight" | "right" | "bottomRight"
+  | "bottom" | "bottomLeft" | "left" | "topLeft" | null;
 
 export const TextWidgetEditor = ({
   widgets,
@@ -51,34 +73,12 @@ export const TextWidgetEditor = ({
 }: TextWidgetEditorProps) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<{ id: string; startX: number; startY: number; offsetX: number; offsetY: number } | null>(null);
+  const [resizing, setResizing] = useState<{ id: string; handle: ResizeHandle; startX: number; startY: number; startWidth: number; startHeight: number; startPosX: number; startPosY: number } | null>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const contentRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const contentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const previousIds = useRef<string[]>([]);
-
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!containerRef.current) return;
-      if (!containerRef.current.contains(event.target as Node)) {
-        setSelectedId(null);
-        setEditingId(null);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setEditingId(null);
-        setSelectedId(null);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
 
   useEffect(() => {
     const previous = previousIds.current;
@@ -101,53 +101,172 @@ export const TextWidgetEditor = ({
     previousIds.current = widgets.map((widget) => widget.id);
   }, [widgets]);
 
-  const resizeConfig = useMemo(
-    () => ({
-      enabled: {
-        top: true,
-        topRight: true,
-        right: true,
-        bottomRight: true,
-        bottom: true,
-        bottomLeft: true,
-        left: true,
-        topLeft: true,
-      },
-      disabled: {
-        top: false,
-        topRight: false,
-        right: false,
-        bottomRight: false,
-        bottom: false,
-        bottomLeft: false,
-        left: false,
-        topLeft: false,
-      },
-    }),
-    []
-  );
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (dragging) {
+        const widget = widgets.find(w => w.id === dragging.id);
+        if (widget) {
+          const newX = e.clientX - dragging.offsetX;
+          const newY = e.clientY - dragging.offsetY;
+          onUpdateWidget(dragging.id, { x: newX, y: newY });
+        }
+      } else if (resizing) {
+        const widget = widgets.find(w => w.id === resizing.id);
+        if (!widget) return;
 
-  const handleStyles = useMemo(() => {
-    const base = {
-      width: 10,
-      height: 10,
-      background: "#ffffff",
-      border: "1px solid #3b82f6",
-      borderRadius: 2,
-      boxSizing: "border-box" as const,
+        const deltaX = e.clientX - resizing.startX;
+        const deltaY = e.clientY - resizing.startY;
+
+        let newWidth = resizing.startWidth;
+        let newHeight = resizing.startHeight;
+        let newX = resizing.startPosX;
+        let newY = resizing.startPosY;
+
+        switch (resizing.handle) {
+          case "right":
+            newWidth = Math.max(MIN_WIDTH, resizing.startWidth + deltaX);
+            break;
+          case "left":
+            newWidth = Math.max(MIN_WIDTH, resizing.startWidth - deltaX);
+            newX = resizing.startPosX + (resizing.startWidth - newWidth);
+            break;
+          case "bottom":
+            newHeight = Math.max(MIN_HEIGHT, resizing.startHeight + deltaY);
+            break;
+          case "top":
+            newHeight = Math.max(MIN_HEIGHT, resizing.startHeight - deltaY);
+            newY = resizing.startPosY + (resizing.startHeight - newHeight);
+            break;
+          case "topRight":
+            newWidth = Math.max(MIN_WIDTH, resizing.startWidth + deltaX);
+            newHeight = Math.max(MIN_HEIGHT, resizing.startHeight - deltaY);
+            newY = resizing.startPosY + (resizing.startHeight - newHeight);
+            break;
+          case "topLeft":
+            newWidth = Math.max(MIN_WIDTH, resizing.startWidth - deltaX);
+            newHeight = Math.max(MIN_HEIGHT, resizing.startHeight - deltaY);
+            newX = resizing.startPosX + (resizing.startWidth - newWidth);
+            newY = resizing.startPosY + (resizing.startHeight - newHeight);
+            break;
+          case "bottomRight":
+            newWidth = Math.max(MIN_WIDTH, resizing.startWidth + deltaX);
+            newHeight = Math.max(MIN_HEIGHT, resizing.startHeight + deltaY);
+            break;
+          case "bottomLeft":
+            newWidth = Math.max(MIN_WIDTH, resizing.startWidth - deltaX);
+            newHeight = Math.max(MIN_HEIGHT, resizing.startHeight + deltaY);
+            newX = resizing.startPosX + (resizing.startWidth - newWidth);
+            break;
+        }
+
+        onUpdateWidget(resizing.id, {
+          width: newWidth,
+          height: newHeight,
+          x: newX,
+          y: newY,
+        });
+      }
     };
 
-    return {
-      top: { ...base, cursor: "ns-resize" },
-      topRight: { ...base, cursor: "nesw-resize" },
-      right: { ...base, cursor: "ew-resize" },
-      bottomRight: { ...base, cursor: "nwse-resize" },
-      bottom: { ...base, cursor: "ns-resize" },
-      bottomLeft: { ...base, cursor: "nesw-resize" },
-      left: { ...base, cursor: "ew-resize" },
-      topLeft: { ...base, cursor: "nwse-resize" },
+    const handleMouseUp = () => {
+      setDragging(null);
+      setResizing(null);
+    };
+
+    if (dragging || resizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [dragging, resizing, widgets, onUpdateWidget]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) {
+        setSelectedId(null);
+        setEditingId(null);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setEditingId(null);
+        setSelectedId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  const handleDragStart = (e: React.MouseEvent, widget: TextWidget) => {
+    if (editingId === widget.id) return;
+    e.stopPropagation();
+    setSelectedId(widget.id);
+    setDragging({
+      id: widget.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - widget.x,
+      offsetY: e.clientY - widget.y,
+    });
+  };
+
+  const handleResizeStart = (e: React.MouseEvent, widget: TextWidget, handle: ResizeHandle) => {
+    e.stopPropagation();
+    setResizing({
+      id: widget.id,
+      handle,
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth: widget.width,
+      startHeight: widget.height,
+      startPosX: widget.x,
+      startPosY: widget.y,
+    });
+  };
+
+  const ResizeHandles = ({ widget }: { widget: TextWidget }) => {
+    const handles: { position: ResizeHandle; cursor: string; style: React.CSSProperties }[] = [
+      { position: "top", cursor: "ns-resize", style: { top: -HANDLE_SIZE / 2, left: "50%", transform: "translateX(-50%)" } },
+      { position: "topRight", cursor: "nesw-resize", style: { top: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2 } },
+      { position: "right", cursor: "ew-resize", style: { top: "50%", right: -HANDLE_SIZE / 2, transform: "translateY(-50%)" } },
+      { position: "bottomRight", cursor: "nwse-resize", style: { bottom: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2 } },
+      { position: "bottom", cursor: "ns-resize", style: { bottom: -HANDLE_SIZE / 2, left: "50%", transform: "translateX(-50%)" } },
+      { position: "bottomLeft", cursor: "nesw-resize", style: { bottom: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2 } },
+      { position: "left", cursor: "ew-resize", style: { top: "50%", left: -HANDLE_SIZE / 2, transform: "translateY(-50%)" } },
+      { position: "topLeft", cursor: "nwse-resize", style: { top: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2 } },
+    ];
+
+    return (
+      <>
+        {handles.map(({ position, cursor, style }) => (
+          <div
+            key={position}
+            onMouseDown={(e) => handleResizeStart(e, widget, position)}
+            style={{
+              ...style,
+              position: "absolute",
+              width: HANDLE_SIZE,
+              height: HANDLE_SIZE,
+              background: "#ffffff",
+              border: "2px solid #3b82f6",
+              borderRadius: "3px",
+              cursor,
+              zIndex: 10,
+            }}
+          />
+        ))}
+      </>
+    );
+  };
 
   return (
     <div ref={containerRef} className="absolute inset-0 pointer-events-none">
@@ -155,157 +274,117 @@ export const TextWidgetEditor = ({
         const isSelected = selectedId === widget.id;
         const isEditing = editingId === widget.id;
         const fontSize = calculateFontSize(widget.width, widget.height);
-        const resizeHandles = isSelected && !isEditing ? handleStyles : undefined;
 
         return (
-          <div key={widget.id} className="absolute pointer-events-auto">
-            <Rnd
-              size={{ width: widget.width, height: widget.height }}
-              position={{ x: widget.x, y: widget.y }}
-              minWidth={80}
-              minHeight={48}
-              onDragStop={(e, d) => {
-                onUpdateWidget(widget.id, { x: d.x, y: d.y });
-              }}
-              onResizeStop={(e, direction, ref, delta, position) => {
-                onUpdateWidget(widget.id, {
-                  width: parseInt(ref.style.width),
-                  height: parseInt(ref.style.height),
-                  ...position,
-                });
-              }}
-              bounds="parent"
-              disableDragging={isEditing}
-              enableResizing={
-                isSelected && !isEditing
-                  ? resizeConfig.enabled
-                  : resizeConfig.disabled
-              }
-              resizeHandleStyles={resizeHandles}
-              dragHandleClassName="text-widget-drag-surface"
-              className={cn(
-                "text-widget-wrapper",
-                isSelected
-                  ? "ring-1 ring-blue-500"
-                  : "ring-1 ring-transparent"
-              )}
+          <div key={widget.id} style={{ position: "absolute", pointerEvents: "auto", zIndex: isSelected ? 1000 : 1 }}>
+            <div
               style={{
-                zIndex: isSelected ? 1000 : undefined,
+                position: "absolute",
+                left: widget.x,
+                top: widget.y,
+                width: widget.width,
+                height: widget.height,
+                border: isSelected ? "2px solid #3b82f6" : "2px solid transparent",
+                borderRadius: "4px",
+                cursor: isEditing ? "text" : "move",
               }}
-              onDragStart={() => {
+              onMouseDown={(e) => !isEditing && handleDragStart(e, widget)}
+              onDoubleClick={() => {
                 setSelectedId(widget.id);
-              }}
-              onResizeStart={() => {
-                setSelectedId(widget.id);
+                setEditingId(widget.id);
+                requestAnimationFrame(() => {
+                  const node = contentRefs.current.get(widget.id);
+                  node?.focus();
+                  const selection = window.getSelection();
+                  if (selection && node?.firstChild) {
+                    selection.selectAllChildren(node);
+                    selection.collapseToEnd();
+                  }
+                });
               }}
             >
               <div
-                onPointerDown={() => {
-                  setSelectedId(widget.id);
+                ref={(el) => {
+                  if (el) contentRefs.current.set(widget.id, el);
+                  else contentRefs.current.delete(widget.id);
                 }}
-                onDoubleClick={() => {
-                  setSelectedId(widget.id);
-                  setEditingId(widget.id);
-                  const node = contentRefs.current.get(widget.id);
-                  requestAnimationFrame(() => {
-                    node?.focus();
-                    const selection = window.getSelection();
-                    if (selection && node?.firstChild) {
-                      selection.selectAllChildren(node);
-                      selection.collapseToEnd();
-                    }
-                  });
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onInput={(e) => {
+                  onUpdateWidget(widget.id, { content: e.currentTarget.textContent || "" });
+                }}
+                onBlur={() => {
+                  setEditingId((current) => (current === widget.id ? null : current));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    setEditingId(null);
+                  }
                 }}
                 style={{
-                  outline: isSelected ? "1px solid #3b82f6" : "none",
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  outline: "none",
+                  fontSize: `${fontSize}px`,
+                  color: colorToCSS(widget.fill),
+                  fontFamily: "'Kalam', cursive",
+                  fontWeight: 400,
+                  textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
+                  userSelect: isEditing ? "text" : "none",
+                  pointerEvents: isEditing ? "auto" : "none",
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  borderRadius: "4px",
                 }}
-                className={cn(
-                  "text-widget-drag-surface relative h-full w-full select-none rounded-sm",
-                  isEditing ? "cursor-text" : "cursor-move"
-                )}
-              >
-                <ContentEditable
-                  html={widget.content || "Text"}
-                  onChange={(e: ContentEditableEvent) => {
-                    onUpdateWidget(widget.id, { content: e.target.value });
-                  }}
-                  onBlur={() => {
-                    setEditingId((current) =>
-                      current === widget.id ? null : current
-                    );
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      event.preventDefault();
-                      setEditingId(null);
-                    }
-                  }}
-                  disabled={!isEditing}
-                  className={cn(
-                    "h-full w-full flex items-center justify-center text-center drop-shadow-md outline-none",
-                    font.className
-                  )}
-                  style={{
-                    fontSize: `${fontSize}px`,
-                    color: colorToCSS(widget.fill),
-                    pointerEvents: isEditing ? "auto" : "none",
-                  }}
-                  innerRef={(node: HTMLElement | null) => {
-                    if (node) contentRefs.current.set(widget.id, node);
-                    else contentRefs.current.delete(widget.id);
-                  }}
-                  suppressContentEditableWarning
-                />
+                dangerouslySetInnerHTML={{ __html: widget.content || "Text" }}
+              />
 
-                {isSelected && (
-                  <div className="pointer-events-none absolute -left-5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full border border-blue-500 bg-white text-blue-500 shadow-sm">
-                    <span className="text-[10px] leading-none font-semibold">::</span>
-                  </div>
-                )}
-              </div>
-            </Rnd>
+              {isSelected && !isEditing && <ResizeHandles widget={widget} />}
+            </div>
 
-            {/* Selection Tools - Same as canvas */}
-            {isSelected && (
+            {isSelected && !isEditing && (
               <div
-                className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
                 style={{
-                  transform: `translate(calc(${widget.x}px - 50%), calc(${widget.y - 16}px - 100%))`,
+                  position: "absolute",
+                  left: widget.x + widget.width / 2,
+                  top: Math.max(widget.y - 70, 10),
+                  transform: "translateX(-50%)",
+                  zIndex: 1001,
+                  pointerEvents: "auto",
                 }}
+                className="p-3 rounded-xl bg-white shadow-lg border flex gap-2"
               >
                 <ColorPicker onChange={(color) => onColorChange(widget.id, color)} />
 
-                <div className="flex flex-col gap-y-0.5">
-                  <Hint label="Bring to front">
-                    <button
-                      type="button"
-                      onClick={() => onReorderWidget(widget.id, "front")}
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-blue-500/20 hover:text-blue-800 h-10 w-10"
-                    >
-                      <BringToFront />
-                    </button>
-                  </Hint>
-                  <Hint label="Send to back" side="bottom">
-                    <button
-                      type="button"
-                      onClick={() => onReorderWidget(widget.id, "back")}
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-blue-500/20 hover:text-blue-800 h-10 w-10"
-                    >
-                      <SendToBack />
-                    </button>
-                  </Hint>
+                <div className="flex gap-1 border-l pl-2">
+                  <button
+                    onClick={() => onReorderWidget(widget.id, "front")}
+                    className="p-2 hover:bg-blue-100 rounded transition-colors"
+                    title="Bring to front"
+                  >
+                    <BringToFront size={20} />
+                  </button>
+                  <button
+                    onClick={() => onReorderWidget(widget.id, "back")}
+                    className="p-2 hover:bg-blue-100 rounded transition-colors"
+                    title="Send to back"
+                  >
+                    <SendToBack size={20} />
+                  </button>
                 </div>
 
-                <div className="flex items-center pl-2 ml-2 border-l border-neutral-200">
-                  <Hint label="Delete">
-                    <button
-                      type="button"
-                      onClick={() => onDeleteWidget(widget.id)}
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-blue-500/20 hover:text-blue-800 h-10 w-10"
-                    >
-                      <Trash2 />
-                    </button>
-                  </Hint>
+                <div className="flex border-l pl-2">
+                  <button
+                    onClick={() => onDeleteWidget(widget.id)}
+                    className="p-2 hover:bg-red-100 rounded transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 size={20} />
+                  </button>
                 </div>
               </div>
             )}
