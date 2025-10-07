@@ -30,6 +30,7 @@ import {
   type Color,
   LayerType,
   type ImageLayer,
+  type Layer,
   type Point,
   type Side,
   type XYWH,
@@ -587,21 +588,25 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const selectedLayerId =
     selection && selection.length > 0 ? selection[selection.length - 1] : null;
 
-  const layers = useStorage((root) => root.layers);
-
-  const selectedImageLayer = useMemo<ImageLayer | null>(() => {
-    if (!isImagePanelOpen || !selectedLayerId || !layers) {
+  const selectedImageLayer = useStorage<ImageLayer | null>((root) => {
+    if (!isImagePanelOpen || !selectedLayerId) {
       return null;
     }
 
-    const layer = layers.get(selectedLayerId);
+    const liveLayer = root.layers.get(selectedLayerId) as
+      | LiveObject<Layer>
+      | undefined;
+    if (!liveLayer) {
+      return null;
+    }
 
-    if (layer?.type === LayerType.Image && "imageUrl" in layer) {
+    const layer = liveLayer.toObject();
+    if (layer.type === LayerType.Image && "imageUrl" in layer) {
       return layer as ImageLayer;
     }
 
     return null;
-  }, [isImagePanelOpen, selectedLayerId, layers]);
+  });
 
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
