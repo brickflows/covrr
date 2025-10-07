@@ -592,24 +592,33 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const selection = useSelf((me) => me.presence.selection);
   const selectedImageLayer = useMemo<ImageLayer | null>(() => {
     if (!isImagePanelOpen) {
+      console.log("Panel is closed, not checking selection");
       return null;
     }
 
     if (!selection || selection.length === 0) {
+      console.log("No selection or empty selection");
       return null;
     }
 
     const selectedId = selection[selection.length - 1];
+    console.log("Selected ID:", selectedId, "Total layers:", layersSnapshot.length);
+
     const entry = layersSnapshot.find(([id]) => id === selectedId);
     if (!entry) {
+      console.log("No layer found for selected ID:", selectedId);
       return null;
     }
 
     const layer = entry[1];
+    console.log("Found layer:", { type: layer.type, hasImageUrl: "imageUrl" in layer });
+
     if (layer?.type === LayerType.Image && "imageUrl" in layer) {
+      console.log("✓ Image layer with URL found:", (layer as any).imageUrl);
       return layer as ImageLayer;
     }
 
+    console.log("Layer is not Image type or missing imageUrl. Type:", layer.type);
     return null;
   }, [isImagePanelOpen, layersSnapshot, selection]);
 
