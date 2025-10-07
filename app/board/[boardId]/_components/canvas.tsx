@@ -44,24 +44,8 @@ import { SelectionTools } from "./selection-tools";
 import { Toolbar } from "./toolbar";
 import { ZoomControls } from "./zoom-controls";
 import { BookDetailsPopover } from "./book-details-popover";
-import { ImageEditorPanel } from "./image-editor-panel";
+import { ImageTextEditor } from "./image-text-editor";
 import { X } from "lucide-react";
-
-// Wrapper component for Image Editor Panel to avoid hook issues
-const ImageEditorPanelWrapper = ({ layerId, onClose }: { layerId: string; onClose: () => void }) => {
-  const layers = useStorage((root) => root.layers);
-  const layer = layers.get(layerId);
-
-  if (!layer || layer.type !== LayerType.Image) return null;
-
-  return (
-    <ImageEditorPanel
-      layerId={layerId}
-      layer={layer}
-      onClose={onClose}
-    />
-  );
-};
 
 const MAX_LAYERS = 100;
 const MULTISELECTION_THRESHOLD = 5;
@@ -84,7 +68,6 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     b: 0,
   });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [editingImageLayerId, setEditingImageLayerId] = useState<string | null>(null);
 
   useDisableScrollBounce();
   const history = useHistory();
@@ -597,6 +580,14 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
   const selections = useOthersMapped((other) => other.presence.selection);
 
+  // Check for selected Image layer for text editor
+  const mySelection = useSelf((me) => me.presence.selection);
+  const selectedImageLayer = useStorage((root) => {
+    if (!mySelection || mySelection.length !== 1) return null;
+    const layer = root.layers.get(mySelection[0]);
+    return layer?.type === LayerType.Image ? { id: mySelection[0], layer } : null;
+  });
+
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
       if (
@@ -619,9 +610,6 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [setCanvasState, camera, history, canvasState.mode],
   );
 
-  const handleImageLayerClick = useCallback((layerId: string) => {
-    setEditingImageLayerId(layerId);
-  }, []);
 
   const layerIdsToColorSelection = useMemo(() => {
     const layerIdsToColorSelection: Record<string, string> = {};
@@ -677,6 +665,15 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         redo={history.redo}
       />
       <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
+
+      {/* Image Text Editor - show when single Image layer selected */}
+      {selectedImageLayer && (
+        <ImageTextEditor
+          layerId={selectedImageLayer.id}
+          textWidgets={selectedImageLayer.layer.textWidgets || []}
+        />
+      )}
+
       <ZoomControls
         scale={camera.scale}
         onZoomIn={handleZoomIn}
@@ -706,7 +703,6 @@ export const Canvas = ({ boardId }: CanvasProps) => {
               boardId={boardId}
               selectionColor={layerIdsToColorSelection[layerId]}
               onImageClick={(url) => setSelectedImage(url)}
-              onImageLayerClick={handleImageLayerClick}
             />
           ))}
           <SelectionBox
@@ -773,9 +769,6 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           </div>
         </div>
       )}
-
-      {/* Image Editor Panel */}
-      {editingImageLayerId && <ImageEditorPanelWrapper layerId={editingImageLayerId} onClose={() => setEditingImageLayerId(null)} />}
     </main>
   );
 };

@@ -21,10 +21,9 @@ type LayerPreviewProps = {
   selectionColor?: string;
   boardId?: string;
   onImageClick?: (imageUrl: string) => void;
-  onImageLayerClick?: (layerId: string) => void;
 };
 
-const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId, onImageClick, onImageLayerClick }: LayerPreviewProps) => {
+const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId, onImageClick }: LayerPreviewProps) => {
     const layer = useStorage((root) => root.layers.get(id));
     const layers = useStorage((root) => root.layers);
 
@@ -141,7 +140,6 @@ const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId
             layer={layer}
             onPointerDown={onLayerPointerDown}
             selectionColor={selectionColor}
-            onImageClick={onImageLayerClick}
           />
         );
       default:
@@ -158,8 +156,7 @@ export const LayerPreview = memo(LayerPreviewComponent, (prevProps, nextProps) =
     prevProps.selectionColor === nextProps.selectionColor &&
     prevProps.boardId === nextProps.boardId &&
     prevProps.onLayerPointerDown === nextProps.onLayerPointerDown &&
-    prevProps.onImageClick === nextProps.onImageClick &&
-    prevProps.onImageLayerClick === nextProps.onImageLayerClick
+    prevProps.onImageClick === nextProps.onImageClick
   );
 });
 
