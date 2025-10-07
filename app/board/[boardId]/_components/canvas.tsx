@@ -29,8 +29,6 @@ import {
   type CanvasState,
   type Color,
   LayerType,
-  type ImageLayer,
-  type Layer,
   type Point,
   type Side,
   type XYWH,
@@ -47,7 +45,7 @@ import { Toolbar } from "./toolbar";
 import { ZoomControls } from "./zoom-controls";
 import { BookDetailsPopover } from "./book-details-popover";
 import { TextWidgetEditor } from "./text-widget-editor";
-import { X, Type, ImageIcon } from "lucide-react";
+import { X } from "lucide-react";
 
 const MAX_LAYERS = 100;
 const MULTISELECTION_THRESHOLD = 5;
@@ -896,184 +894,11 @@ export const Canvas = ({ boardId }: CanvasProps) => {
               />
             </div>
 
-            {/* Add Text Box Button */}
-            <div className="p-4">
-              <button
-                onClick={() => {
-                  const newWidget = {
-                    id: nanoid(),
-                    content: "Add a heading",
-                    x: 50,
-                    y: 50,
-                    width: 250,
-                    height: 80,
-                    fill: { r: 0, g: 0, b: 0 },
-                  };
-                  setTextWidgets(prev => [...prev, newWidget]);
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
-              >
-                <Type className="w-5 h-5" />
-                Add a text box
-              </button>
-            </div>
-
-            {/* Default Text Styles */}
-            <div className="px-4 pb-4">
-              <h3 className="text-xs font-semibold text-gray-600 mb-3">Default text styles</h3>
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "Add a heading",
-                      x: 50,
-                      y: 50,
-                      width: 300,
-                      height: 100,
-                      fill: { r: 0, g: 0, b: 0 },
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                  }}
-                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors"
-                >
-                  <div className="text-2xl font-bold">Add a heading</div>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "Add a subheading",
-                      x: 50,
-                      y: 50,
-                      width: 250,
-                      height: 60,
-                      fill: { r: 0, g: 0, b: 0 },
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                  }}
-                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors"
-                >
-                  <div className="text-lg font-semibold">Add a subheading</div>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "Add a little bit of body text",
-                      x: 50,
-                      y: 50,
-                      width: 220,
-                      height: 50,
-                      fill: { r: 0, g: 0, b: 0 },
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                  }}
-                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors"
-                >
-                  <div className="text-sm">Add a little bit of body text</div>
-                </button>
-              </div>
-            </div>
-
-            {/* Font Combinations */}
-            <div className="px-4 pb-4">
-              <h3 className="text-xs font-semibold text-gray-600 mb-3">Font combinations</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {/* Font Combo 1 */}
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "ITSY",
-                      x: 50,
-                      y: 50,
-                      width: 150,
-                      height: 80,
-                      fill: { r: 0, g: 0, b: 0 },
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                  }}
-                  className="aspect-square border border-gray-200 rounded-lg hover:border-purple-500 transition-colors p-3 flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <div className="text-2xl font-black">ITSY</div>
-                    <div className="text-xs italic">bitsy</div>
-                  </div>
-                </button>
-
-                {/* Font Combo 2 */}
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "brand",
-                      x: 50,
-                      y: 50,
-                      width: 150,
-                      height: 80,
-                      fill: { r: 124, g: 58, b: 237 },
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                  }}
-                  className="aspect-square border border-gray-200 rounded-lg hover:border-purple-500 transition-colors p-3 flex items-center justify-center"
-                >
-                  <div className="text-center text-purple-600">
-                    <div className="text-xl font-bold lowercase">brand</div>
-                    <div className="text-xs uppercase tracking-wider">IDENTITY</div>
-                  </div>
-                </button>
-
-                {/* Font Combo 3 */}
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "user FLOW",
-                      x: 50,
-                      y: 50,
-                      width: 150,
-                      height: 80,
-                      fill: { r: 0, g: 0, b: 0 },
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                  }}
-                  className="aspect-square border border-gray-200 rounded-lg hover:border-purple-500 transition-colors p-3 flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <div className="text-sm italic">user</div>
-                    <div className="text-xl font-bold">FLOW</div>
-                  </div>
-                </button>
-
-                {/* Font Combo 4 */}
-                <button
-                  onClick={() => {
-                    const newWidget = {
-                      id: nanoid(),
-                      content: "REVENUE",
-                      x: 50,
-                      y: 50,
-                      width: 150,
-                      height: 80,
-                      fill: { r: 59, g: 130, b: 246 },
-                    };
-                    setTextWidgets(prev => [...prev, newWidget]);
-                  }}
-                  className="aspect-square border border-gray-200 rounded-lg hover:border-purple-500 transition-colors p-3 flex items-center justify-center"
-                >
-                  <div className="text-center text-blue-500">
-                    <div className="text-xs italic">Net</div>
-                    <div className="text-lg font-bold tracking-wider">REVENUE</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <div className="px-4 pb-4 text-xs text-gray-500">
-              {textWidgets.length} text widget(s)
+            {/* Placeholder when image is selected */}
+            <div className="p-4 flex items-center justify-center h-full">
+              <p className="text-gray-400 text-center text-sm">
+                {selectedImageUrl ? "Image selected" : "Select an image to view"}
+              </p>
             </div>
           </div>
         </div>
