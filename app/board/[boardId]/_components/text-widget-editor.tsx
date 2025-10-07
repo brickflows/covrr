@@ -250,7 +250,7 @@ export const TextWidgetEditor = ({
                     color: colorToCSS(widget.fill),
                     pointerEvents: isEditing ? "auto" : "none",
                   }}
-                  innerRef={(node) => {
+                  innerRef={(node: HTMLElement | null) => {
                     if (node) contentRefs.current.set(widget.id, node);
                     else contentRefs.current.delete(widget.id);
                   }}
