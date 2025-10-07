@@ -27,8 +27,14 @@ export const Image = ({
       width={width}
       height={height}
       onPointerDown={(e) => {
+        console.log("Image clicked! URL:", imageUrl);
         onPointerDown(e, id);
-        onImageSelect?.(imageUrl);
+        if (onImageSelect) {
+          console.log("Calling onImageSelect with:", imageUrl);
+          onImageSelect(imageUrl);
+        } else {
+          console.log("onImageSelect is not defined");
+        }
       }}
       onClick={() => onImageClick?.(id)}
       style={{

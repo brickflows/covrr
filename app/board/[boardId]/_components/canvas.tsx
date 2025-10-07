@@ -585,6 +585,11 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
+  // Debug logging
+  useEffect(() => {
+    console.log("selectedImageUrl changed:", selectedImageUrl);
+  }, [selectedImageUrl]);
+
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
       if (
