@@ -92,14 +92,15 @@ export const SelectionTools = memo(
 
     // For Message nodes, show delete button in top-right corner
     if (hasMessageSelected) {
-      const deleteX = selectionBounds.x + selectionBounds.width + camera.x;
-      const deleteY = selectionBounds.y + camera.y;
+      // Calculate position in screen coordinates, accounting for camera zoom
+      const deleteX = (selectionBounds.x + selectionBounds.width) * camera.scale + camera.x;
+      const deleteY = selectionBounds.y * camera.scale + camera.y;
 
       return (
         <div
           className="absolute p-1 rounded-md bg-white shadow-sm border flex select-none"
           style={{
-            transform: `translate(${deleteX}px, ${deleteY - 12}px) translate(-100%, -100%)`,
+            transform: `translate(${deleteX + 5}px, ${deleteY - 5}px)`,
           }}
         >
           <Hint label="Delete">
