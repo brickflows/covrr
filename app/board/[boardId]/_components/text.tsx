@@ -2,6 +2,18 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { BringToFront, SendToBack, Trash2 } from "lucide-react";
+import { Kalam } from "next/font/google";
+import ContentEditable, {
+  type ContentEditableEvent,
+} from "react-contenteditable";
+import { cn } from "@/lib/utils";
+import { useMutation } from "@/liveblocks.config";
+import type { TextLayer } from "@/types/canvas";
+
+const font = Kalam({
+  subsets: ["latin"],
+  weight: ["400"],
+});
 
 type Color = { r: number; g: number; b: number };
 
@@ -392,5 +404,70 @@ export const TextWidgetEditor = ({
         );
       })}
     </div>
+  );
+};
+
+// Original Text component for canvas TextLayer
+type TextProps = {
+  id: string;
+  layer: TextLayer;
+  onPointerDown: (e: React.PointerEvent, id: string) => void;
+  selectionColor?: string;
+};
+
+const calculateFontSizeForLayer = (width: number, height: number) => {
+  const maxFontSize = 96;
+  const scaleFactor = 0.5;
+  const fontSizeBasedOnHeight = height * scaleFactor;
+  const fontSizeBasedOnWidth = width * scaleFactor;
+
+  return Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth, maxFontSize);
+};
+
+export const Text = ({
+  id,
+  layer,
+  onPointerDown,
+  selectionColor,
+}: TextProps) => {
+  const { x, y, width, height, fill, value } = layer;
+
+  const updateValue = useMutation(({ storage }, newValue: string) => {
+    const liveLayers = storage.get("layers");
+
+    const layer = liveLayers.get(id);
+    if (layer) {
+      layer.update({ value: newValue });
+    }
+  }, []);
+
+  const handleContentChange = (e: ContentEditableEvent) => {
+    updateValue(e.target.value);
+  };
+
+  return (
+    <foreignObject
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      onPointerDown={(e) => onPointerDown(e, id)}
+      style={{
+        outline: selectionColor ? `1px solid ${selectionColor}` : "none",
+      }}
+    >
+      <ContentEditable
+        html={value || "Text"}
+        onChange={handleContentChange}
+        className={cn(
+          "h-full w-full flex items-center justify-center text-center drop-shadow-md outline-none",
+          font.className,
+        )}
+        style={{
+          fontSize: calculateFontSizeForLayer(width, height),
+          color: fill ? colorToCSS(fill) : "#000",
+        }}
+      />
+    </foreignObject>
   );
 };
