@@ -105,6 +105,7 @@ export const TextWidgetEditor = ({
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (dragging) {
+        e.preventDefault();
         const widget = widgets.find(w => w.id === dragging.id);
         if (widget) {
           const newX = e.clientX - dragging.offsetX;
@@ -112,6 +113,7 @@ export const TextWidgetEditor = ({
           onUpdateWidget(dragging.id, { x: newX, y: newY });
         }
       } else if (resizing) {
+        e.preventDefault();
         const widget = widgets.find(w => w.id === resizing.id);
         if (!widget) return;
 
@@ -167,6 +169,7 @@ export const TextWidgetEditor = ({
           y: newY,
         });
       } else if (isRotating && rotatingId) {
+        e.preventDefault();
         const widget = widgets.find(w => w.id === rotatingId);
         if (!widget) return;
 
@@ -179,7 +182,7 @@ export const TextWidgetEditor = ({
         const deltaY = e.clientY - centerY;
         const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 90;
 
-        onUpdateWidget(rotatingId, { rotation: Math.round(angle) });
+        onUpdateWidget(rotatingId, { rotation: angle });
       }
     };
 
@@ -187,6 +190,9 @@ export const TextWidgetEditor = ({
       setDragging(null);
       setResizing(null);
       setIsRotating(false);
+      // Reset cursor styles
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
     };
 
     if (dragging || resizing || isRotating) {
@@ -232,6 +238,7 @@ export const TextWidgetEditor = ({
   const handleDragStart = (e: React.MouseEvent, widget: TextWidget) => {
     if (editingId === widget.id || widget.locked) return;
     e.stopPropagation();
+    e.preventDefault();
     setSelectedId(widget.id);
     onWidgetSelect?.(widget.id);
     setDragging({
@@ -241,11 +248,15 @@ export const TextWidgetEditor = ({
       offsetX: e.clientX - widget.x,
       offsetY: e.clientY - widget.y,
     });
+    // Add cursor style to body during drag
+    document.body.style.cursor = "grabbing";
+    document.body.style.userSelect = "none";
   };
 
   const handleResizeStart = (e: React.MouseEvent, widget: TextWidget, handle: ResizeHandle) => {
     if (widget.locked) return;
     e.stopPropagation();
+    e.preventDefault();
     setResizing({
       id: widget.id,
       handle,
@@ -256,6 +267,7 @@ export const TextWidgetEditor = ({
       startPosX: widget.x,
       startPosY: widget.y,
     });
+    document.body.style.userSelect = "none";
   };
 
   const ResizeHandles = ({ widget }: { widget: TextWidget }) => {
@@ -305,15 +317,17 @@ export const TextWidgetEditor = ({
             <div
               style={{
                 position: "absolute",
-                left: widget.x,
-                top: widget.y,
+                left: 0,
+                top: 0,
                 width: widget.width,
                 height: widget.height,
                 border: isSelected ? "2px solid #3b82f6" : "2px solid transparent",
                 borderRadius: "4px",
-                cursor: isEditing ? "text" : "move",
-                transform: `rotate(${widget.rotation || 0}deg)`,
+                cursor: isEditing ? "text" : (dragging?.id === widget.id ? "grabbing" : "grab"),
+                transform: `translate(${widget.x}px, ${widget.y}px) rotate(${widget.rotation || 0}deg)`,
                 transformOrigin: "center center",
+                willChange: dragging?.id === widget.id || resizing?.id === widget.id || (isRotating && rotatingId === widget.id) ? "transform" : "auto",
+                transition: dragging?.id === widget.id || resizing?.id === widget.id || (isRotating && rotatingId === widget.id) ? "none" : "transform 0.1s ease-out",
               }}
               onMouseDown={(e) => !isEditing && handleDragStart(e, widget)}
               onDoubleClick={() => {
@@ -403,7 +417,7 @@ export const TextWidgetEditor = ({
             {isSelected && !isEditing && !widget.locked && (
               <div
                 style={{
-                  position: "absolute",
+                  position: "fixed",
                   left: widget.x + widget.width / 2,
                   top: Math.max(widget.y - 70, 10),
                   transform: "translateX(-50%)",
@@ -528,7 +542,7 @@ export const TextWidgetEditor = ({
             {widget.locked && (
               <div
                 style={{
-                  position: "absolute",
+                  position: "fixed",
                   left: widget.x + widget.width / 2,
                   top: Math.max(widget.y - 50, 10),
                   transform: "translateX(-50%)",
