@@ -752,7 +752,11 @@ export const Message = ({
       <g>
         {generatedImages.map((imageUrl, index) => {
           const currentSize = imageSizes[index] || { width: 240, height: 360 };
-          const xOffset = index * (currentSize.width + 10); // 10px gap between images
+
+          // Calculate cumulative offset based on all previous images
+          const xOffset = imageSizes.slice(0, index).reduce((sum, size) => {
+            return sum + (size?.width || 240) + 10; // 10px gap between images
+          }, 0);
 
           return (
             <foreignObject
