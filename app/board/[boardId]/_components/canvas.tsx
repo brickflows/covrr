@@ -867,108 +867,210 @@ export const Canvas = ({ boardId }: CanvasProps) => {
             )}
           </div>
 
-          {/* Section 2: Text & Controls */}
-          <div className="w-64 bg-white p-4 flex flex-col gap-4 overflow-y-auto">
-            <h3 className="font-semibold">Text Controls</h3>
+          {/* Section 2: Text & Controls - Canva Style */}
+          <div className="w-80 bg-white flex flex-col overflow-y-auto">
+            {/* Search Fonts */}
+            <div className="p-4 border-b">
+              <input
+                type="text"
+                placeholder="Search fonts and combinations"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+              />
+            </div>
 
-            {/* Add Text Button */}
-            <button
-              onClick={() => {
-                const newWidget = {
-                  id: nanoid(),
-                  content: "New Text",
-                  x: 50,
-                  y: 50,
-                  width: 200,
-                  height: 60,
-                  fontSize: 24,
-                  color: "#000000",
-                  fontFamily: "Arial",
-                };
-                setTextWidgets(prev => [...prev, newWidget]);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              <Type className="w-4 h-4" />
-              Add Text
-            </button>
+            {/* Add Text Box Button */}
+            <div className="p-4">
+              <button
+                onClick={() => {
+                  const newWidget = {
+                    id: nanoid(),
+                    content: "Add a heading",
+                    x: 50,
+                    y: 50,
+                    width: 250,
+                    height: 80,
+                    fontSize: 32,
+                    color: "#000000",
+                    fontFamily: "Arial",
+                  };
+                  setTextWidgets(prev => [...prev, newWidget]);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+              >
+                <Type className="w-5 h-5" />
+                Add a text box
+              </button>
+            </div>
 
-            {/* Text Style Controls */}
-            {textWidgets.length > 0 && (
-              <>
-                <div className="border-t pt-4">
-                  <label className="block text-sm font-medium mb-2">Font Size</label>
-                  <input
-                    type="range"
-                    min="12"
-                    max="72"
-                    defaultValue="24"
-                    onChange={(e) => {
-                      const lastWidget = textWidgets[textWidgets.length - 1];
-                      if (lastWidget) {
-                        setTextWidgets(prev =>
-                          prev.map((w, i) =>
-                            i === prev.length - 1
-                              ? { ...w, fontSize: parseInt(e.target.value) }
-                              : w
-                          )
-                        );
-                      }
-                    }}
-                    className="w-full"
-                  />
-                </div>
+            {/* Default Text Styles */}
+            <div className="px-4 pb-4">
+              <h3 className="text-xs font-semibold text-gray-600 mb-3">Default text styles</h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "Add a heading",
+                      x: 50,
+                      y: 50,
+                      width: 300,
+                      height: 100,
+                      fontSize: 48,
+                      color: "#000000",
+                      fontFamily: "Arial",
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                  }}
+                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors"
+                >
+                  <div className="text-2xl font-bold">Add a heading</div>
+                </button>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Text Color</label>
-                  <input
-                    type="color"
-                    defaultValue="#000000"
-                    onChange={(e) => {
-                      const lastWidget = textWidgets[textWidgets.length - 1];
-                      if (lastWidget) {
-                        setTextWidgets(prev =>
-                          prev.map((w, i) =>
-                            i === prev.length - 1
-                              ? { ...w, color: e.target.value }
-                              : w
-                          )
-                        );
-                      }
-                    }}
-                    className="w-full h-10 rounded cursor-pointer"
-                  />
-                </div>
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "Add a subheading",
+                      x: 50,
+                      y: 50,
+                      width: 250,
+                      height: 60,
+                      fontSize: 28,
+                      color: "#000000",
+                      fontFamily: "Arial",
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                  }}
+                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors"
+                >
+                  <div className="text-lg font-semibold">Add a subheading</div>
+                </button>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Font Family</label>
-                  <select
-                    defaultValue="Arial"
-                    onChange={(e) => {
-                      const lastWidget = textWidgets[textWidgets.length - 1];
-                      if (lastWidget) {
-                        setTextWidgets(prev =>
-                          prev.map((w, i) =>
-                            i === prev.length - 1
-                              ? { ...w, fontFamily: e.target.value }
-                              : w
-                          )
-                        );
-                      }
-                    }}
-                    className="w-full px-3 py-2 border rounded-lg"
-                  >
-                    <option value="Arial">Arial</option>
-                    <option value="Times New Roman">Times New Roman</option>
-                    <option value="Courier New">Courier New</option>
-                    <option value="Georgia">Georgia</option>
-                    <option value="Verdana">Verdana</option>
-                  </select>
-                </div>
-              </>
-            )}
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "Add a little bit of body text",
+                      x: 50,
+                      y: 50,
+                      width: 220,
+                      height: 50,
+                      fontSize: 16,
+                      color: "#000000",
+                      fontFamily: "Arial",
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                  }}
+                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-purple-500 transition-colors"
+                >
+                  <div className="text-sm">Add a little bit of body text</div>
+                </button>
+              </div>
+            </div>
 
-            <div className="text-xs text-gray-500 mt-auto">
+            {/* Font Combinations */}
+            <div className="px-4 pb-4">
+              <h3 className="text-xs font-semibold text-gray-600 mb-3">Font combinations</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {/* Font Combo 1 */}
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "ITSY",
+                      x: 50,
+                      y: 50,
+                      width: 150,
+                      height: 80,
+                      fontSize: 36,
+                      color: "#000000",
+                      fontFamily: "Impact",
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                  }}
+                  className="aspect-square border border-gray-200 rounded-lg hover:border-purple-500 transition-colors p-3 flex items-center justify-center"
+                >
+                  <div className="text-center">
+                    <div className="text-2xl font-black">ITSY</div>
+                    <div className="text-xs italic">bitsy</div>
+                  </div>
+                </button>
+
+                {/* Font Combo 2 */}
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "brand",
+                      x: 50,
+                      y: 50,
+                      width: 150,
+                      height: 80,
+                      fontSize: 32,
+                      color: "#7c3aed",
+                      fontFamily: "Georgia",
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                  }}
+                  className="aspect-square border border-gray-200 rounded-lg hover:border-purple-500 transition-colors p-3 flex items-center justify-center"
+                >
+                  <div className="text-center text-purple-600">
+                    <div className="text-xl font-bold lowercase">brand</div>
+                    <div className="text-xs uppercase tracking-wider">IDENTITY</div>
+                  </div>
+                </button>
+
+                {/* Font Combo 3 */}
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "user FLOW",
+                      x: 50,
+                      y: 50,
+                      width: 150,
+                      height: 80,
+                      fontSize: 28,
+                      color: "#000000",
+                      fontFamily: "Georgia",
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                  }}
+                  className="aspect-square border border-gray-200 rounded-lg hover:border-purple-500 transition-colors p-3 flex items-center justify-center"
+                >
+                  <div className="text-center">
+                    <div className="text-sm italic">user</div>
+                    <div className="text-xl font-bold">FLOW</div>
+                  </div>
+                </button>
+
+                {/* Font Combo 4 */}
+                <button
+                  onClick={() => {
+                    const newWidget = {
+                      id: nanoid(),
+                      content: "REVENUE",
+                      x: 50,
+                      y: 50,
+                      width: 150,
+                      height: 80,
+                      fontSize: 32,
+                      color: "#3b82f6",
+                      fontFamily: "Courier New",
+                    };
+                    setTextWidgets(prev => [...prev, newWidget]);
+                  }}
+                  className="aspect-square border border-gray-200 rounded-lg hover:border-purple-500 transition-colors p-3 flex items-center justify-center"
+                >
+                  <div className="text-center text-blue-500">
+                    <div className="text-xs italic">Net</div>
+                    <div className="text-lg font-bold tracking-wider">REVENUE</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div className="px-4 pb-4 text-xs text-gray-500">
               {textWidgets.length} text widget(s)
             </div>
           </div>
