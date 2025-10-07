@@ -837,7 +837,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       {/* Right Image Inspection Panel */}
       {isImagePanelOpen && (
         <div
-          className="fixed right-0 top-0 bottom-0 bg-white shadow-2xl z-50 flex"
+          className="fixed right-0 top-0 bottom-0 bg-gray-100 shadow-2xl z-50 flex"
           style={{ width: `${panelWidth}px` }}
         >
           {/* Resize Handle */}
@@ -859,7 +859,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           </button>
 
           {/* Section 1: Image Display with Text Widgets */}
-          <div className="relative flex-1 flex items-center justify-center bg-gray-50 border-r overflow-hidden">
+          <div className="relative flex-1 flex items-center justify-center bg-gray-100 overflow-hidden p-5">
             {selectedImageUrl ? (
               <div className="relative w-full h-full">
                 <img
@@ -909,7 +909,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           </div>
 
           {/* Section 2: Text & Controls - Canva Style */}
-          <div className="w-80 bg-white flex flex-col overflow-y-auto">
+          <div className="bg-white flex flex-col overflow-y-auto" style={{ width: '280px' }}>
             {/* Search Fonts */}
             <div className="p-4 border-b">
               <input
