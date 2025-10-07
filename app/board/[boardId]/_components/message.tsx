@@ -44,6 +44,7 @@ export const Message = ({
   const [expandedImageIndex, setExpandedImageIndex] = useState<number | null>(null);
   const [imageScale, setImageScale] = useState(1);
   const [imageSizes, setImageSizes] = useState<{ width: number; height: number }[]>([]);
+  const [imageAspectRatios, setImageAspectRatios] = useState<number[]>([]);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStartPos, setResizeStartPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const negativePromptRef = useRef<HTMLTextAreaElement>(null);
@@ -69,8 +70,28 @@ export const Message = ({
       console.log("🔄 Restoring images from Convex:", savedConvexImages.imageUrls.length);
       setGeneratedImages(savedConvexImages.imageUrls);
       setSelectedImage(0); // Auto-select first image
-      // Initialize image sizes
-      setImageSizes(savedConvexImages.imageUrls.map(() => ({ width: 240, height: 360 })));
+
+      // Load images to get their aspect ratios
+      const loadImageAspectRatios = async () => {
+        const ratios = await Promise.all(
+          savedConvexImages.imageUrls.map((url: string) => {
+            return new Promise<number>((resolve) => {
+              const img = new Image();
+              img.onload = () => {
+                resolve(img.width / img.height);
+              };
+              img.onerror = () => {
+                resolve(240 / 360); // Default 2:3 ratio
+              };
+              img.src = url;
+            });
+          })
+        );
+        setImageAspectRatios(ratios);
+        setImageSizes(ratios.map(ratio => ({ width: 240, height: 240 / ratio })));
+      };
+
+      loadImageAspectRatios();
     }
   }, [savedConvexImages]);
 
@@ -111,8 +132,28 @@ export const Message = ({
         setGeneratedImages(eventData.event.imageUrls); // Array of 4 images
         setSelectedImage(0); // Auto-select first image
         setIsGenerating(false);
-        // Initialize image sizes
-        setImageSizes(eventData.event.imageUrls.map(() => ({ width: 240, height: 360 })));
+
+        // Load images to get their aspect ratios
+        const loadImageAspectRatios = async () => {
+          const ratios = await Promise.all(
+            eventData.event.imageUrls.map((url: string) => {
+              return new Promise<number>((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                  resolve(img.width / img.height);
+                };
+                img.onerror = () => {
+                  resolve(240 / 360); // Default 2:3 ratio
+                };
+                img.src = url;
+              });
+            })
+          );
+          setImageAspectRatios(ratios);
+          setImageSizes(ratios.map(ratio => ({ width: 240, height: 240 / ratio })));
+        };
+
+        loadImageAspectRatios();
         toast.success("Cover generated successfully! Click on an image to select it.");
       }
 
@@ -399,41 +440,19 @@ export const Message = ({
     setExpandedImageIndex(index);
   };
 
-  const handleResizeMove = (e: React.PointerEvent) => {
-    if (!isResizing || resizeStartPos === null || expandedImageIndex === null) return;
-
-    e.stopPropagation();
-    const deltaX = e.clientX - resizeStartPos.x;
-    const deltaY = e.clientY - resizeStartPos.y;
-
-    const newWidth = Math.max(100, resizeStartPos.width + deltaX);
-    const newHeight = Math.max(150, resizeStartPos.height + deltaY);
-
-    setImageSizes(prev => {
-      const newSizes = [...prev];
-      newSizes[expandedImageIndex] = { width: newWidth, height: newHeight };
-      return newSizes;
-    });
-  };
-
-  const handleResizeEnd = (e: React.PointerEvent) => {
-    if (isResizing) {
-      e.stopPropagation();
-      setIsResizing(false);
-      setResizeStartPos(null);
-    }
-  };
-
   useEffect(() => {
     if (isResizing) {
       const handleGlobalPointerMove = (e: PointerEvent) => {
         if (resizeStartPos === null || expandedImageIndex === null) return;
 
+        const aspectRatio = imageAspectRatios[expandedImageIndex] || (240 / 360);
         const deltaX = e.clientX - resizeStartPos.x;
         const deltaY = e.clientY - resizeStartPos.y;
 
-        const newWidth = Math.max(100, resizeStartPos.width + deltaX);
-        const newHeight = Math.max(150, resizeStartPos.height + deltaY);
+        // Use the larger delta to determine new size, maintaining aspect ratio
+        const delta = Math.max(deltaX, deltaY);
+        const newWidth = Math.max(100, resizeStartPos.width + delta);
+        const newHeight = newWidth / aspectRatio;
 
         setImageSizes(prev => {
           const newSizes = [...prev];
@@ -455,27 +474,33 @@ export const Message = ({
         window.removeEventListener('pointerup', handleGlobalPointerUp);
       };
     }
-  }, [isResizing, resizeStartPos, expandedImageIndex]);
+  }, [isResizing, resizeStartPos, expandedImageIndex, imageAspectRatios]);
+
+  // Calculate total height needed for images
+  const imageRowHeight = generatedImages.length > 0 && !isEditing
+    ? Math.max(...imageSizes.map(size => size?.height || 360)) + 20
+    : 0;
 
   return (
-    <foreignObject
-      x={x}
-      y={y}
-      width={width}
-      height={height}
-      onPointerDown={(e) => {
-        if (!isDraggingImage) {
-          onPointerDown(e, id);
-        }
-      }}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      style={{
-        outline: selectionColor ? `2px solid ${selectionColor}` : "none",
-        borderRadius: "12px",
-      }}
-    >
+    <>
+      <foreignObject
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        onPointerDown={(e) => {
+          if (!isDraggingImage && !isResizing) {
+            onPointerDown(e, id);
+          }
+        }}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        style={{
+          outline: selectionColor ? `2px solid ${selectionColor}` : "none",
+          borderRadius: "12px",
+        }}
+      >
       <div
         className={`h-full w-full bg-white rounded-xl shadow-md border flex flex-col overflow-visible transition-all ${
           isDragOver ? 'border-blue-500 border-2 shadow-lg' : 'border-gray-200'
@@ -643,68 +668,15 @@ export const Message = ({
               </div>
             )}
 
-            {/* Generated Images Section - Below message, inside message container */}
-            {(isGenerating || generatedImages.length > 0) && !isEditing && (
+            {/* Loading indicator for generating images - keep inside message node */}
+            {isGenerating && !isEditing && (
               <div className="px-4 pb-3">
-                {isGenerating ? (
-                  <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
-                    <div className="text-center">
-                      <Loader2 className="w-6 h-6 text-gray-400 animate-spin mx-auto mb-2" />
-                      <p className="text-xs text-gray-500">Generating covers...</p>
-                    </div>
+                <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+                  <div className="text-center">
+                    <Loader2 className="w-6 h-6 text-gray-400 animate-spin mx-auto mb-2" />
+                    <p className="text-xs text-gray-500">Generating covers...</p>
                   </div>
-                ) : generatedImages.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    {/* Horizontal row of images */}
-                    <div className="flex gap-2 overflow-x-auto pb-1">
-                      {generatedImages.map((imageUrl, index) => {
-                        const currentSize = imageSizes[index] || { width: 240, height: 360 };
-
-                        return (
-                          <div
-                            key={index}
-                            className={`relative rounded-lg overflow-visible bg-gray-100 flex-shrink-0 ${
-                              selectedImage === index ? 'ring-2 ring-blue-500' : ''
-                            }`}
-                            style={{
-                              width: `${currentSize.width}px`,
-                              height: `${currentSize.height}px`
-                            }}
-                          >
-                            <img
-                              src={imageUrl}
-                              alt={`Generated variant ${index + 1}`}
-                              className="w-full h-full object-cover rounded-lg"
-                              draggable={false}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedImage(index);
-                              }}
-                              style={{ cursor: 'pointer' }}
-                            />
-                            {/* Selection indicator */}
-                            {selectedImage === index && (
-                              <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            )}
-                            {/* Resize handle - bottom right corner */}
-                            <div
-                              className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-nwse-resize rounded-tl"
-                              style={{
-                                transform: 'translate(50%, 50%)',
-                                zIndex: 10
-                              }}
-                              onPointerDown={(e) => handleResizeStart(e, index)}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
+                </div>
               </div>
             )}
           </div>
@@ -773,5 +745,66 @@ export const Message = ({
         )}
       </div>
     </foreignObject>
+
+    {/* Generated Images Section - Rendered outside foreignObject but positioned below */}
+    {generatedImages.length > 0 && !isEditing && (
+      <g>
+        {generatedImages.map((imageUrl, index) => {
+          const currentSize = imageSizes[index] || { width: 240, height: 360 };
+          const xOffset = index * (currentSize.width + 10); // 10px gap between images
+
+          return (
+            <foreignObject
+              key={`generated-image-${index}`}
+              x={x + xOffset}
+              y={y + height + 10}
+              width={currentSize.width}
+              height={currentSize.height}
+              style={{ overflow: 'visible' }}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                setSelectedImage(index);
+              }}
+            >
+              <div
+                className={`relative rounded-lg overflow-visible bg-gray-100 flex-shrink-0 ${
+                  selectedImage === index ? 'ring-2 ring-blue-500' : ''
+                }`}
+                style={{
+                  width: `${currentSize.width}px`,
+                  height: `${currentSize.height}px`
+                }}
+              >
+                <img
+                  src={imageUrl}
+                  alt={`Generated variant ${index + 1}`}
+                  className="w-full h-full object-cover rounded-lg"
+                  draggable={false}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImage(index);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                />
+                {/* Selection indicator */}
+                {selectedImage === index && (
+                  <div className="absolute top-2 right-2 bg-black rounded-full w-3 h-3"></div>
+                )}
+                {/* Resize handle - bottom right corner */}
+                <div
+                  className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-nwse-resize rounded-tl"
+                  style={{
+                    transform: 'translate(50%, 50%)',
+                    zIndex: 10
+                  }}
+                  onPointerDown={(e) => handleResizeStart(e, index)}
+                />
+              </div>
+            </foreignObject>
+          );
+        })}
+      </g>
+    )}
+    </>
   );
 };
