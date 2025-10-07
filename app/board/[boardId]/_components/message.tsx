@@ -50,6 +50,7 @@ export const Message = ({
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStartPos, setResizeStartPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [imageVisibility, setImageVisibility] = useState<boolean[]>([true, true, true, true]);
+  const [createdImageLayers, setCreatedImageLayers] = useState<{ [index: number]: string }>({}); // Maps image index to layer ID
   const negativePromptRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -211,13 +212,29 @@ export const Message = ({
     [],
   );
 
-  // Convert image to Image layer for text editing
-  const convertToImageLayer = useMutation(
+  // Check if layer exists, if yes select it, if no create it
+  const selectOrCreateImageLayer = useMutation(
     ({ storage, setMyPresence }, imageUrl: string, imageIndex: number) => {
+      // Check if we already created a layer for this image
+      const existingLayerId = createdImageLayers[imageIndex];
+
+      if (existingLayerId) {
+        // Check if the layer still exists in storage
+        const liveLayers = storage.get("layers");
+        const layerExists = liveLayers.get(existingLayerId);
+
+        if (layerExists) {
+          // Just select the existing layer
+          setMyPresence({ selection: [existingLayerId] }, { addToHistory: true });
+          toast.info("Image layer selected!");
+          return existingLayerId;
+        }
+      }
+
+      // Create new Image layer if doesn't exist
       const liveLayers = storage.get("layers");
       const liveLayerIds = storage.get("layerIds");
 
-      // Get current size and position
       const currentSize = imageSizes[imageIndex] || { width: 240, height: 360 };
       const xOffset = imageSizes.slice(0, imageIndex).reduce((sum, size, i) => {
         if (imageVisibility[i]) {
@@ -226,7 +243,6 @@ export const Message = ({
         return sum;
       }, 0);
 
-      // Create new Image layer
       const layerId = nanoid();
       const layer = new LiveObject({
         type: LayerType.Image,
@@ -242,14 +258,15 @@ export const Message = ({
 
       liveLayerIds.push(layerId);
       liveLayers.set(layerId, layer);
-
-      // Select the new layer
       setMyPresence({ selection: [layerId] }, { addToHistory: true });
+
+      // Track this layer ID
+      setCreatedImageLayers(prev => ({ ...prev, [imageIndex]: layerId }));
 
       toast.success("Image added to canvas!");
       return layerId;
     },
-    [x, y, width, height, imageSizes, imageVisibility]
+    [x, y, width, height, imageSizes, imageVisibility, createdImageLayers]
   );
 
   const handleSend = async () => {
@@ -896,8 +913,8 @@ export const Message = ({
                   draggable={false}
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Create Image layer on canvas when clicked
-                    convertToImageLayer(imageUrl, index);
+                    // Select existing or create new Image layer
+                    selectOrCreateImageLayer(imageUrl, index);
                   }}
                   style={{ cursor: 'pointer' }}
                 />
