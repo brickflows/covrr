@@ -47,6 +47,7 @@ export const Message = ({
   const [imageAspectRatios, setImageAspectRatios] = useState<number[]>([]);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStartPos, setResizeStartPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [imageVisibility, setImageVisibility] = useState<boolean[]>([true, true, true, true]);
   const negativePromptRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -744,6 +745,29 @@ export const Message = ({
             {incomingConnectionCount}
           </div>
         )}
+
+        {/* Visibility indicator dots - 4 dots at the bottom */}
+        {generatedImages.length > 0 && !isEditing && (
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1.5">
+            {[0, 1, 2, 3].map((index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageVisibility(prev => {
+                    const newVisibility = [...prev];
+                    newVisibility[index] = !newVisibility[index];
+                    return newVisibility;
+                  });
+                }}
+                className={`w-2 h-2 rounded-full transition-colors cursor-pointer hover:opacity-80 ${
+                  imageVisibility[index] ? 'bg-black' : 'bg-gray-400'
+                }`}
+                title={`Toggle image ${index + 1} visibility`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </foreignObject>
 
@@ -752,11 +776,18 @@ export const Message = ({
       <g>
         {generatedImages.map((imageUrl, index) => {
           const currentSize = imageSizes[index] || { width: 240, height: 360 };
+          const isVisible = imageVisibility[index];
 
-          // Calculate cumulative offset based on all previous images
-          const xOffset = imageSizes.slice(0, index).reduce((sum, size) => {
-            return sum + (size?.width || 240) + 10; // 10px gap between images
+          // Calculate cumulative offset based only on visible images before this one
+          const xOffset = imageSizes.slice(0, index).reduce((sum, size, i) => {
+            if (imageVisibility[i]) {
+              return sum + (size?.width || 240) + 10; // 10px gap between images
+            }
+            return sum;
           }, 0);
+
+          // Don't render if not visible
+          if (!isVisible) return null;
 
           return (
             <foreignObject
