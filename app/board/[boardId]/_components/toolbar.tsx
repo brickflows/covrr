@@ -8,6 +8,7 @@ import {
   StickyNote,
   Type,
   Undo2,
+  ImageIcon,
 } from "lucide-react";
 
 import { CanvasMode, LayerType, type CanvasState } from "@/types/canvas";
@@ -119,6 +120,21 @@ export const Toolbar = ({
           isActive={
             canvasState.mode === CanvasMode.Inserting &&
             canvasState.layerType === LayerType.Message
+          }
+        />
+
+        <ToolButton
+          label="Image"
+          icon={ImageIcon}
+          onClick={() =>
+            setCanvasState({
+              mode: CanvasMode.Inserting,
+              layerType: LayerType.Image,
+            })
+          }
+          isActive={
+            canvasState.mode === CanvasMode.Inserting &&
+            canvasState.layerType === LayerType.Image
           }
         />
 

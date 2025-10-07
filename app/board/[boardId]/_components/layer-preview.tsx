@@ -13,6 +13,7 @@ import { Text } from "./text";
 import { Path } from "./path";
 import { Connection } from "./connection";
 import { Message } from "./message";
+import { Image } from "./image";
 
 type LayerPreviewProps = {
   id: string;
@@ -20,9 +21,10 @@ type LayerPreviewProps = {
   selectionColor?: string;
   boardId?: string;
   onImageClick?: (imageUrl: string) => void;
+  onImageLayerClick?: (layerId: string) => void;
 };
 
-const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId, onImageClick }: LayerPreviewProps) => {
+const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId, onImageClick, onImageLayerClick }: LayerPreviewProps) => {
     const layer = useStorage((root) => root.layers.get(id));
     const layers = useStorage((root) => root.layers);
 
@@ -132,6 +134,16 @@ const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId
             onImageClick={onImageClick}
           />
         );
+      case LayerType.Image:
+        return (
+          <Image
+            id={id}
+            layer={layer}
+            onPointerDown={onLayerPointerDown}
+            selectionColor={selectionColor}
+            onImageClick={onImageLayerClick}
+          />
+        );
       default:
         console.warn("Unknown layer type");
         return null;
@@ -146,7 +158,8 @@ export const LayerPreview = memo(LayerPreviewComponent, (prevProps, nextProps) =
     prevProps.selectionColor === nextProps.selectionColor &&
     prevProps.boardId === nextProps.boardId &&
     prevProps.onLayerPointerDown === nextProps.onLayerPointerDown &&
-    prevProps.onImageClick === nextProps.onImageClick
+    prevProps.onImageClick === nextProps.onImageClick &&
+    prevProps.onImageLayerClick === nextProps.onImageLayerClick
   );
 });
 

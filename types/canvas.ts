@@ -32,6 +32,7 @@ export enum LayerType {
   Note,
   Connection,
   Message,
+  Image,
 }
 
 export type RectangleLayer = {
@@ -101,6 +102,35 @@ export type MessageImage = {
   storageId?: string;
 };
 
+export type TextWidget = {
+  id: string;
+  content: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  fontFamily: string;
+  fontWeight: number;
+  color: string;
+  rotation: number;
+  width?: number;
+  height?: number;
+  textAlign: 'left' | 'center' | 'right';
+  letterSpacing: number;
+  lineHeight: number;
+};
+
+export type ImageLayer = {
+  type: LayerType.Image;
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+  fill: Color;
+  imageUrl: string;
+  imageName?: string;
+  textWidgets?: TextWidget[];
+};
+
 export type MessageLayer = {
   type: LayerType.Message;
   x: number;
@@ -156,7 +186,8 @@ export type CanvasState =
         | LayerType.Rectangle
         | LayerType.Text
         | LayerType.Note
-        | LayerType.Message;
+        | LayerType.Message
+        | LayerType.Image;
     }
   | {
       mode: CanvasMode.Pencil;
@@ -195,4 +226,5 @@ export type Layer =
   | TextLayer
   | NoteLayer
   | ConnectionLayer
-  | MessageLayer;
+  | MessageLayer
+  | ImageLayer;

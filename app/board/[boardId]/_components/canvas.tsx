@@ -44,7 +44,25 @@ import { SelectionTools } from "./selection-tools";
 import { Toolbar } from "./toolbar";
 import { ZoomControls } from "./zoom-controls";
 import { BookDetailsPopover } from "./book-details-popover";
+import { ImageEditorPanel } from "./image-editor-panel";
+import { ImageUploadDialog } from "./image-upload-dialog";
 import { X } from "lucide-react";
+
+// Wrapper component for Image Editor Panel to avoid hook issues
+const ImageEditorPanelWrapper = ({ layerId, onClose }: { layerId: string; onClose: () => void }) => {
+  const layers = useStorage((root) => root.layers);
+  const layer = layers.get(layerId);
+
+  if (!layer || layer.type !== LayerType.Image) return null;
+
+  return (
+    <ImageEditorPanel
+      layerId={layerId}
+      layer={layer}
+      onClose={onClose}
+    />
+  );
+};
 
 const MAX_LAYERS = 100;
 const MULTISELECTION_THRESHOLD = 5;
@@ -67,6 +85,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     b: 0,
   });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [editingImageLayerId, setEditingImageLayerId] = useState<string | null>(null);
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [pendingImagePosition, setPendingImagePosition] = useState<Point | null>(null);
 
   useDisableScrollBounce();
   const history = useHistory();
@@ -97,8 +118,10 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         | LayerType.Rectangle
         | LayerType.Text
         | LayerType.Note
-        | LayerType.Message,
+        | LayerType.Message
+        | LayerType.Image,
       position: Point,
+      imageUrl?: string,
     ) => {
       const liveLayers = storage.get("layers");
 
@@ -107,9 +130,11 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       const liveLayerIds = storage.get("layerIds");
       const layerId = nanoid();
 
-      // Set different default sizes for Message type
+      // Set different default sizes for Message and Image types
       const defaultSize = layerType === LayerType.Message ?
         { width: 280, height: 200 } :
+        layerType === LayerType.Image ?
+        { width: 400, height: 300 } :
         { width: 100, height: 100 };
 
       const layerData: any = {
@@ -126,6 +151,12 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         layerData.images = [];
         layerData.value = "";
         layerData.negativePrompt = "";
+      }
+
+      // Add Image-specific fields
+      if (layerType === LayerType.Image && imageUrl) {
+        layerData.imageUrl = imageUrl;
+        layerData.textWidgets = [];
       }
 
       const layer = new LiveObject(layerData);
@@ -471,7 +502,14 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       } else if (canvasState.mode === CanvasMode.Pencil) {
         insertPath();
       } else if (canvasState.mode === CanvasMode.Inserting) {
-        insertLayer(canvasState.layerType, point);
+        // For Image layer, show upload dialog first
+        if (canvasState.layerType === LayerType.Image) {
+          setPendingImagePosition(point);
+          setShowImageUpload(true);
+          setCanvasState({ mode: CanvasMode.None });
+        } else {
+          insertLayer(canvasState.layerType, point);
+        }
       } else if (canvasState.mode === CanvasMode.Connecting) {
         // Find which layer we're over
         const layers = storage.get("layers");
@@ -591,6 +629,23 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [setCanvasState, camera, history, canvasState.mode],
   );
 
+  const handleImageLayerClick = useCallback((layerId: string) => {
+    setEditingImageLayerId(layerId);
+  }, []);
+
+  const handleImageUploadSubmit = useCallback((imageUrl: string) => {
+    if (pendingImagePosition) {
+      insertLayer(LayerType.Image, pendingImagePosition, imageUrl);
+      setPendingImagePosition(null);
+    }
+    setShowImageUpload(false);
+  }, [pendingImagePosition, insertLayer]);
+
+  const handleImageUploadCancel = useCallback(() => {
+    setShowImageUpload(false);
+    setPendingImagePosition(null);
+  }, []);
+
   const layerIdsToColorSelection = useMemo(() => {
     const layerIdsToColorSelection: Record<string, string> = {};
 
@@ -674,6 +729,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
               boardId={boardId}
               selectionColor={layerIdsToColorSelection[layerId]}
               onImageClick={(url) => setSelectedImage(url)}
+              onImageLayerClick={handleImageLayerClick}
             />
           ))}
           <SelectionBox
@@ -739,6 +795,17 @@ export const Canvas = ({ boardId }: CanvasProps) => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Image Editor Panel */}
+      {editingImageLayerId && <ImageEditorPanelWrapper layerId={editingImageLayerId} onClose={() => setEditingImageLayerId(null)} />}
+
+      {/* Image Upload Dialog */}
+      {showImageUpload && (
+        <ImageUploadDialog
+          onSubmit={handleImageUploadSubmit}
+          onCancel={handleImageUploadCancel}
+        />
       )}
     </main>
   );
