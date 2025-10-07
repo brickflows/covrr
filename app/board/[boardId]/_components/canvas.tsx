@@ -585,9 +585,27 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   // Get currently selected layer (for image panel)
   const selection = useSelf((me) => me.presence.selection);
   const selectedImageLayer = useStorage((root) => {
-    if (!isImagePanelOpen || !selection || selection.length !== 1) return null;
+    if (!isImagePanelOpen) {
+      return null;
+    }
+    if (!selection || selection.length !== 1) {
+      return null;
+    }
     const layer = root.layers.get(selection[0]);
-    return layer?.type === LayerType.Image ? layer : null;
+    if (!layer) {
+      console.log("No layer found for selection:", selection[0]);
+      return null;
+    }
+
+    console.log("Selected layer type:", layer.type, "has imageUrl:", 'imageUrl' in layer);
+
+    // Check if it's an Image layer with imageUrl
+    if (layer.type === LayerType.Image && 'imageUrl' in layer) {
+      console.log("Image layer found with URL:", (layer as any).imageUrl);
+      return layer as any;
+    }
+    console.log("Layer is not an Image type, type is:", layer.type);
+    return null;
   });
 
   const onLayerPointerDown = useMutation(
@@ -781,15 +799,17 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           </button>
 
           {/* Section 1: Image Display */}
-          <div className="relative flex-1 flex items-center justify-center bg-gray-50 border-r">
+          <div className="relative flex-1 flex items-center justify-center bg-gray-50 border-r overflow-hidden">
             {selectedImageLayer ? (
-              <img
-                src={selectedImageLayer.imageUrl}
-                alt=""
-                className="max-w-full max-h-full object-contain p-8"
-              />
+              <div className="w-full h-full flex items-center justify-center p-4">
+                <img
+                  src={selectedImageLayer.imageUrl}
+                  alt=""
+                  className="w-full h-full object-contain"
+                />
+              </div>
             ) : (
-              <p className="text-gray-400">Select an image on canvas</p>
+              <p className="text-gray-400 text-sm">Select an image on canvas</p>
             )}
 
             {/* Navigation Buttons */}
