@@ -886,6 +886,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                   }}
                   onDeleteWidget={(id) => {
                     setTextWidgets(prev => prev.filter(w => w.id !== id));
+                    setSelectedTextWidgetId(null);
                   }}
                   onReorderWidget={(id, direction) => {
                     setTextWidgets(prev => {
@@ -909,6 +910,10 @@ export const Canvas = ({ boardId }: CanvasProps) => {
                       prev.map(w => w.id === id ? { ...w, fill: color } : w)
                     );
                   }}
+                  onWidgetSelect={(id) => {
+                    setSelectedTextWidgetId(id);
+                  }}
+                  selectedWidgetId={selectedTextWidgetId}
                 />
               </div>
             ) : (

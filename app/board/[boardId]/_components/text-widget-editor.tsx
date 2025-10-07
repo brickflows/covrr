@@ -21,6 +21,8 @@ type TextWidgetEditorProps = {
   onDeleteWidget: (id: string) => void;
   onReorderWidget: (id: string, direction: "front" | "back") => void;
   onColorChange: (id: string, color: Color) => void;
+  onWidgetSelect?: (id: string | null) => void;
+  selectedWidgetId?: string | null;
 };
 
 const MIN_WIDTH = 80;
@@ -70,9 +72,18 @@ export const TextWidgetEditor = ({
   onDeleteWidget,
   onReorderWidget,
   onColorChange,
+  onWidgetSelect,
+  selectedWidgetId,
 }: TextWidgetEditorProps) => {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(selectedWidgetId || null);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Sync with external selectedWidgetId
+  useEffect(() => {
+    if (selectedWidgetId !== undefined) {
+      setSelectedId(selectedWidgetId);
+    }
+  }, [selectedWidgetId]);
   const [dragging, setDragging] = useState<{ id: string; startX: number; startY: number; offsetX: number; offsetY: number } | null>(null);
   const [resizing, setResizing] = useState<{ id: string; handle: ResizeHandle; startX: number; startY: number; startWidth: number; startHeight: number; startPosX: number; startPosY: number } | null>(null);
 
@@ -185,9 +196,15 @@ export const TextWidgetEditor = ({
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (!containerRef.current?.contains(e.target as Node)) {
+      // Don't deselect if clicking in the container or the right panel controls
+      const target = e.target as HTMLElement;
+      const isInContainer = containerRef.current?.contains(target);
+      const isInRightPanel = target.closest('[style*="width: 280px"]') !== null;
+
+      if (!isInContainer && !isInRightPanel) {
         setSelectedId(null);
         setEditingId(null);
+        onWidgetSelect?.(null);
       }
     };
 
@@ -195,6 +212,7 @@ export const TextWidgetEditor = ({
       if (e.key === "Escape") {
         setEditingId(null);
         setSelectedId(null);
+        onWidgetSelect?.(null);
       }
     };
 
@@ -204,12 +222,13 @@ export const TextWidgetEditor = ({
       document.removeEventListener("mousedown", handleClick);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [onWidgetSelect]);
 
   const handleDragStart = (e: React.MouseEvent, widget: TextWidget) => {
     if (editingId === widget.id) return;
     e.stopPropagation();
     setSelectedId(widget.id);
+    onWidgetSelect?.(widget.id);
     setDragging({
       id: widget.id,
       startX: e.clientX,
@@ -292,6 +311,7 @@ export const TextWidgetEditor = ({
               onDoubleClick={() => {
                 setSelectedId(widget.id);
                 setEditingId(widget.id);
+                onWidgetSelect?.(widget.id);
                 requestAnimationFrame(() => {
                   const node = contentRefs.current.get(widget.id);
                   node?.focus();
