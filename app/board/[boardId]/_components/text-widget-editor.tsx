@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { BringToFront, SendToBack, Trash2, Lock, Unlock, Palette } from "lucide-react";
+import { BringToFront, SendToBack, Trash2, Lock, Unlock, Palette, Copy, RotateCw } from "lucide-react";
 
 type Color = { r: number; g: number; b: number };
 
@@ -20,6 +20,7 @@ type TextWidget = {
   lineHeight?: number;
   textAlign?: 'left' | 'center' | 'right';
   locked?: boolean;
+  rotation?: number;
 };
 
 type TextWidgetEditorProps = {
@@ -292,9 +293,12 @@ export const TextWidgetEditor = ({
                 border: isSelected ? "2px solid #3b82f6" : "2px solid transparent",
                 borderRadius: "4px",
                 cursor: isEditing ? "text" : "move",
+                transform: `rotate(${widget.rotation || 0}deg)`,
+                transformOrigin: "center center",
               }}
               onMouseDown={(e) => !isEditing && handleDragStart(e, widget)}
               onDoubleClick={() => {
+                if (widget.locked) return;
                 setSelectedId(widget.id);
                 setEditingId(widget.id);
                 onWidgetSelect?.(widget.id);
@@ -366,18 +370,18 @@ export const TextWidgetEditor = ({
                   zIndex: 1001,
                   pointerEvents: "auto",
                 }}
-                className="p-2 rounded-xl bg-white shadow-lg border flex gap-1"
+                className="p-1.5 rounded-xl bg-white shadow-lg border flex gap-0.5"
               >
                 {/* Color Picker Button */}
                 <div className="relative">
                   <button
                     onClick={() => setShowColorPicker(showColorPicker === widget.id ? null : widget.id)}
-                    className="p-2 hover:bg-gray-100 rounded transition-colors relative"
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors relative"
                     title="Change color"
                   >
-                    <Palette size={18} />
+                    <Palette size={16} />
                     <div
-                      className="absolute bottom-1 right-1 w-3 h-3 rounded-full border border-white"
+                      className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full border border-white"
                       style={{ backgroundColor: colorToCSS(widget.fill) }}
                     />
                   </button>
@@ -413,37 +417,60 @@ export const TextWidgetEditor = ({
                   )}
                 </div>
 
-                <div className="flex gap-1 border-l pl-1">
+                <div className="flex gap-0.5 border-l pl-0.5">
                   <button
                     onClick={() => onReorderWidget(widget.id, "front")}
-                    className="p-2 hover:bg-gray-100 rounded transition-colors"
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                     title="Bring to front"
                   >
-                    <BringToFront size={18} />
+                    <BringToFront size={16} />
                   </button>
                   <button
                     onClick={() => onReorderWidget(widget.id, "back")}
-                    className="p-2 hover:bg-gray-100 rounded transition-colors"
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                     title="Send to back"
                   >
-                    <SendToBack size={18} />
+                    <SendToBack size={16} />
                   </button>
                 </div>
 
-                <div className="flex gap-1 border-l pl-1">
+                <div className="flex gap-0.5 border-l pl-0.5">
+                  <button
+                    onClick={() => {
+                      const newWidget = { ...widget, id: `${widget.id}-copy-${Date.now()}` };
+                      onUpdateWidget(newWidget.id, newWidget);
+                    }}
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    title="Duplicate"
+                  >
+                    <Copy size={16} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const currentRotation = widget.rotation || 0;
+                      onUpdateWidget(widget.id, { rotation: (currentRotation + 45) % 360 });
+                    }}
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    title="Rotate 45°"
+                  >
+                    <RotateCw size={16} />
+                  </button>
+                </div>
+
+                <div className="flex gap-0.5 border-l pl-0.5">
                   <button
                     onClick={() => onUpdateWidget(widget.id, { locked: true })}
-                    className="p-2 hover:bg-gray-100 rounded transition-colors"
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                     title="Lock"
                   >
-                    <Lock size={18} />
+                    <Lock size={16} />
                   </button>
                   <button
                     onClick={() => onDeleteWidget(widget.id)}
-                    className="p-2 hover:bg-red-100 rounded transition-colors"
+                    className="p-1.5 hover:bg-red-100 rounded transition-colors"
                     title="Delete"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>

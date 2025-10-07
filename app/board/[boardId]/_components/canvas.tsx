@@ -612,6 +612,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     lineHeight?: number;
     textAlign?: 'left' | 'center' | 'right';
     locked?: boolean;
+    rotation?: number;
   }>>([]);
 
   const [selectedTextWidgetId, setSelectedTextWidgetId] = useState<string | null>(null);
