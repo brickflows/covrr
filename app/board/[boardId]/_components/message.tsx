@@ -43,6 +43,9 @@ export const Message = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedImageIndex, setExpandedImageIndex] = useState<number | null>(null);
   const [imageScale, setImageScale] = useState(1);
+  const [imageSizes, setImageSizes] = useState<{ width: number; height: number }[]>([]);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStartPos, setResizeStartPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const negativePromptRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -66,6 +69,8 @@ export const Message = ({
       console.log("🔄 Restoring images from Convex:", savedConvexImages.imageUrls.length);
       setGeneratedImages(savedConvexImages.imageUrls);
       setSelectedImage(0); // Auto-select first image
+      // Initialize image sizes
+      setImageSizes(savedConvexImages.imageUrls.map(() => ({ width: 240, height: 360 })));
     }
   }, [savedConvexImages]);
 
@@ -106,6 +111,8 @@ export const Message = ({
         setGeneratedImages(eventData.event.imageUrls); // Array of 4 images
         setSelectedImage(0); // Auto-select first image
         setIsGenerating(false);
+        // Initialize image sizes
+        setImageSizes(eventData.event.imageUrls.map(() => ({ width: 240, height: 360 })));
         toast.success("Cover generated successfully! Click on an image to select it.");
       }
 
@@ -379,6 +386,77 @@ export const Message = ({
     }
   };
 
+  const handleResizeStart = (e: React.PointerEvent, index: number) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    const currentSize = imageSizes[index] || { width: 240, height: 360 };
+    setResizeStartPos({
+      x: e.clientX,
+      y: e.clientY,
+      width: currentSize.width,
+      height: currentSize.height
+    });
+    setExpandedImageIndex(index);
+  };
+
+  const handleResizeMove = (e: React.PointerEvent) => {
+    if (!isResizing || resizeStartPos === null || expandedImageIndex === null) return;
+
+    e.stopPropagation();
+    const deltaX = e.clientX - resizeStartPos.x;
+    const deltaY = e.clientY - resizeStartPos.y;
+
+    const newWidth = Math.max(100, resizeStartPos.width + deltaX);
+    const newHeight = Math.max(150, resizeStartPos.height + deltaY);
+
+    setImageSizes(prev => {
+      const newSizes = [...prev];
+      newSizes[expandedImageIndex] = { width: newWidth, height: newHeight };
+      return newSizes;
+    });
+  };
+
+  const handleResizeEnd = (e: React.PointerEvent) => {
+    if (isResizing) {
+      e.stopPropagation();
+      setIsResizing(false);
+      setResizeStartPos(null);
+    }
+  };
+
+  useEffect(() => {
+    if (isResizing) {
+      const handleGlobalPointerMove = (e: PointerEvent) => {
+        if (resizeStartPos === null || expandedImageIndex === null) return;
+
+        const deltaX = e.clientX - resizeStartPos.x;
+        const deltaY = e.clientY - resizeStartPos.y;
+
+        const newWidth = Math.max(100, resizeStartPos.width + deltaX);
+        const newHeight = Math.max(150, resizeStartPos.height + deltaY);
+
+        setImageSizes(prev => {
+          const newSizes = [...prev];
+          newSizes[expandedImageIndex] = { width: newWidth, height: newHeight };
+          return newSizes;
+        });
+      };
+
+      const handleGlobalPointerUp = () => {
+        setIsResizing(false);
+        setResizeStartPos(null);
+      };
+
+      window.addEventListener('pointermove', handleGlobalPointerMove);
+      window.addEventListener('pointerup', handleGlobalPointerUp);
+
+      return () => {
+        window.removeEventListener('pointermove', handleGlobalPointerMove);
+        window.removeEventListener('pointerup', handleGlobalPointerUp);
+      };
+    }
+  }, [isResizing, resizeStartPos, expandedImageIndex]);
+
   return (
     <foreignObject
       x={x}
@@ -580,58 +658,29 @@ export const Message = ({
                     {/* Horizontal row of images */}
                     <div className="flex gap-2 overflow-x-auto pb-1">
                       {generatedImages.map((imageUrl, index) => {
-                        const isExpanded = expandedImageIndex === index;
-                        const baseWidth = 240;
-                        const baseHeight = 360;
-                        const currentWidth = isExpanded ? baseWidth * imageScale : baseWidth;
-                        const currentHeight = isExpanded ? baseHeight * imageScale : baseHeight;
+                        const currentSize = imageSizes[index] || { width: 240, height: 360 };
 
                         return (
                           <div
                             key={index}
-                            className={`relative group cursor-pointer rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 transition-all duration-200 ${
+                            className={`relative rounded-lg overflow-visible bg-gray-100 flex-shrink-0 ${
                               selectedImage === index ? 'ring-2 ring-blue-500' : ''
                             }`}
                             style={{
-                              width: `${currentWidth}px`,
-                              height: `${currentHeight}px`
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-
-                              // Double-tap detection
-                              const now = Date.now();
-                              const lastTap = lastImageTapRef.current;
-
-                              if (lastTap && lastTap.index === index && now - lastTap.time < 300) {
-                                // Double tap - toggle expansion
-                                if (isExpanded) {
-                                  setExpandedImageIndex(null);
-                                  setImageScale(1);
-                                } else {
-                                  setExpandedImageIndex(index);
-                                  setImageScale(1);
-                                }
-                                lastImageTapRef.current = null;
-                              } else {
-                                // Single tap - select
-                                setSelectedImage(index);
-                                lastImageTapRef.current = { index, time: now };
-                              }
-                            }}
-                            onWheel={(e) => {
-                              if (isExpanded) {
-                                e.stopPropagation();
-                                const delta = -e.deltaY * 0.001;
-                                setImageScale(prev => Math.max(0.5, Math.min(3, prev + delta)));
-                              }
+                              width: `${currentSize.width}px`,
+                              height: `${currentSize.height}px`
                             }}
                           >
                             <img
                               src={imageUrl}
                               alt={`Generated variant ${index + 1}`}
-                              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                              className="w-full h-full object-cover rounded-lg"
                               draggable={false}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedImage(index);
+                              }}
+                              style={{ cursor: 'pointer' }}
                             />
                             {/* Selection indicator */}
                             {selectedImage === index && (
@@ -641,25 +690,15 @@ export const Message = ({
                                 </svg>
                               </div>
                             )}
-                            {/* Hover overlay with number and expand hint */}
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center">
-                              <div className="text-center">
-                                <span className="text-white text-xl font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                                  {index + 1}
-                                </span>
-                                {!isExpanded && (
-                                  <div className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity mt-1">
-                                    Double-tap to expand
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            {/* Expanded indicator */}
-                            {isExpanded && (
-                              <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                                {Math.round(imageScale * 100)}%
-                              </div>
-                            )}
+                            {/* Resize handle - bottom right corner */}
+                            <div
+                              className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-nwse-resize rounded-tl"
+                              style={{
+                                transform: 'translate(50%, 50%)',
+                                zIndex: 10
+                              }}
+                              onPointerDown={(e) => handleResizeStart(e, index)}
+                            />
                           </div>
                         );
                       })}
