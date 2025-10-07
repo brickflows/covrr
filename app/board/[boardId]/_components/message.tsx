@@ -212,45 +212,6 @@ export const Message = ({
   );
 
   // Convert image to Image layer for text editing
-  const convertToImageLayer = useMutation(
-    ({ storage, setMyPresence }, imageUrl: string, imageIndex: number) => {
-      const liveLayers = storage.get("layers");
-      const liveLayerIds = storage.get("layerIds");
-
-      // Get current size and position
-      const currentSize = imageSizes[imageIndex] || { width: 240, height: 360 };
-      const xOffset = imageSizes.slice(0, imageIndex).reduce((sum, size, i) => {
-        if (imageVisibility[i]) {
-          return sum + (size?.width || 240) + 10;
-        }
-        return sum;
-      }, 0);
-
-      // Create new Image layer ONLY
-      const layerId = nanoid();
-      const layer = new LiveObject({
-        type: LayerType.Image,
-        x: x + xOffset,
-        y: y + height + 10,
-        width: currentSize.width,
-        height: currentSize.height,
-        fill: { r: 255, g: 255, b: 255 },
-        imageUrl: imageUrl,
-        imageName: `cover-variant-${imageIndex + 1}`,
-        textWidgets: [],
-      } as any);
-
-      liveLayerIds.push(layerId);
-      liveLayers.set(layerId, layer);
-
-      // Select the new layer to open editor
-      setMyPresence({ selection: [layerId] }, { addToHistory: true });
-
-      toast.success("Image ready for text editing!");
-      return layerId;
-    },
-    [x, y, width, height, imageSizes, imageVisibility]
-  );
 
   const handleSend = async () => {
     if (tempValue.trim() || tempImages.length > 0) {
@@ -904,19 +865,6 @@ export const Message = ({
                 {selectedImage === index && (
                   <div className="absolute top-2 right-2 bg-black rounded-full w-3 h-3"></div>
                 )}
-                {/* Add Text Button - top left */}
-                <button
-                  className="absolute top-2 left-2 bg-black text-white rounded-md px-2 py-1 text-xs flex items-center gap-1 hover:bg-gray-800 transition-colors opacity-0 hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const layerId = convertToImageLayer(imageUrl, index);
-                    toast.info("Opening text editor...");
-                  }}
-                  title="Add text to this image"
-                >
-                  <Type className="w-3 h-3" />
-                  Add Text
-                </button>
                 {/* Resize handle - bottom right corner */}
                 <div
                   className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-nwse-resize rounded-tl"

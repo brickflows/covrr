@@ -579,12 +579,14 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
   const selections = useOthersMapped((other) => other.presence.selection);
 
-  const [editingImageLayerId, setEditingImageLayerId] = useState<string | null>(null);
+  // Image panel state - opened via toolbar, shows selected image
+  const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
 
-  // Get the editing image layer
-  const editingImageLayer = useStorage((root) => {
-    if (!editingImageLayerId) return null;
-    const layer = root.layers.get(editingImageLayerId);
+  // Get currently selected layer (for image panel)
+  const selection = useSelf((me) => me.presence.selection);
+  const selectedImageLayer = useStorage((root) => {
+    if (!isImagePanelOpen || !selection || selection.length !== 1) return null;
+    const layer = root.layers.get(selection[0]);
     return layer?.type === LayerType.Image ? layer : null;
   });
 
@@ -663,11 +665,12 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         canUndo={canUndo}
         undo={history.undo}
         redo={history.redo}
+        onImagePanelToggle={() => setIsImagePanelOpen(!isImagePanelOpen)}
+        isImagePanelOpen={isImagePanelOpen}
       />
       <SelectionTools
         camera={camera}
         setLastUsedColor={setLastUsedColor}
-        onEditImage={(layerId) => setEditingImageLayerId(layerId)}
       />
 
       <ZoomControls
@@ -766,41 +769,47 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         </div>
       )}
 
-      {/* Right Image Edit Panel */}
-      {editingImageLayer && (
-        <div className="fixed right-0 top-0 bottom-0 w-1/3 bg-white shadow-2xl z-50 flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="font-semibold">Image Editor</h2>
-            <button
-              onClick={() => setEditingImageLayerId(null)}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {/* Right Image Inspection Panel */}
+      {isImagePanelOpen && (
+        <div className="fixed right-0 top-0 bottom-0 w-[33vw] bg-white shadow-2xl z-50 flex">
+          {/* Close button */}
+          <button
+            onClick={() => setIsImagePanelOpen(false)}
+            className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full z-10"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* Section 1: Image Display */}
+          <div className="relative flex-1 flex items-center justify-center bg-gray-50 border-r">
+            {selectedImageLayer ? (
+              <img
+                src={selectedImageLayer.imageUrl}
+                alt=""
+                className="max-w-full max-h-full object-contain p-8"
+              />
+            ) : (
+              <p className="text-gray-400">Select an image on canvas</p>
+            )}
+
+            {/* Navigation Buttons */}
+            <div className="absolute top-1/2 -translate-y-1/2 left-2 flex flex-col gap-y-4">
+              <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
+                <Type className="w-5 h-5" />
+              </button>
+              <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
+                <div className="w-5 h-5 bg-orange-500 rounded-full" />
+              </button>
+              <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
+                <ImageIcon className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          {/* Image Section - Full responsive */}
-          <div className="flex-1 p-4 flex items-center justify-center bg-gray-50">
-            <img
-              src={editingImageLayer.imageUrl}
-              alt=""
-              className="max-w-full max-h-full object-contain"
-              style={{ aspectRatio: `${editingImageLayer.width} / ${editingImageLayer.height}` }}
-            />
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="absolute top-1/2 -translate-y-1/2 left-2 flex flex-col gap-y-4">
-            <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
-              <Type className="w-5 h-5" />
-            </button>
-            <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
-              <div className="w-5 h-5 bg-orange-500 rounded-full" />
-            </button>
-            <button className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
-              <ImageIcon className="w-5 h-5" />
-            </button>
+          {/* Section 2: Text & Controls */}
+          <div className="w-64 bg-white p-4 flex flex-col">
+            <h3 className="font-semibold mb-4">Controls</h3>
+            <p className="text-sm text-gray-500">Text editing controls will appear here</p>
           </div>
         </div>
       )}

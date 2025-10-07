@@ -15,11 +15,10 @@ import { ColorPicker } from "./color-picker";
 type SelectionToolsProps = {
   camera: Camera;
   setLastUsedColor: (color: Color) => void;
-  onEditImage?: (layerId: string) => void;
 };
 
 export const SelectionTools = memo(
-  ({ camera, setLastUsedColor, onEditImage }: SelectionToolsProps) => {
+  ({ camera, setLastUsedColor }: SelectionToolsProps) => {
     const selection = useSelf((me) => me.presence.selection);
 
     // Check if any selected layer is a Message type
@@ -31,13 +30,6 @@ export const SelectionTools = memo(
       });
     });
 
-    // Check if selected layer is an Image type (single selection only)
-    const hasImageSelected = useStorage((root) => {
-      if (selection.length !== 1) return false;
-      const layers = root.layers;
-      const layer = layers.get(selection[0]);
-      return layer?.type === LayerType.Image;
-    });
 
     const moveToFront = useMutation(
       ({ storage }) => {
@@ -121,34 +113,6 @@ export const SelectionTools = memo(
       );
     }
 
-    // For Image nodes, show edit button
-    if (hasImageSelected && onEditImage) {
-      return (
-        <div
-          className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
-          style={{
-            transform: `translate(
-              calc(${x}px - 50%),
-              calc(${y - 16}px - 100%)
-          )`,
-          }}
-        >
-          <Hint label="Edit Image">
-            <Button onClick={() => onEditImage(selection[0])} variant="board" size="icon">
-              <Edit />
-            </Button>
-          </Hint>
-
-          <div className="flex items-center pl-2 ml-2 border-l border-t-neutral-200">
-            <Hint label="Delete">
-              <Button variant="board" size="icon" onClick={deleteLayers}>
-                <Trash2 />
-              </Button>
-            </Hint>
-          </div>
-        </div>
-      );
-    }
 
     // For other nodes, show full selection tools
     return (

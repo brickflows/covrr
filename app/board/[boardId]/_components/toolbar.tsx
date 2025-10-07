@@ -22,6 +22,8 @@ type ToolbarProps = {
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  onImagePanelToggle?: () => void;
+  isImagePanelOpen?: boolean;
 };
 
 export const Toolbar = ({
@@ -31,6 +33,8 @@ export const Toolbar = ({
   redo,
   canRedo,
   canUndo,
+  onImagePanelToggle,
+  isImagePanelOpen,
 }: ToolbarProps) => {
   return (
     <div className="absolute top-[50%] -translate-y-[50%] left-2 flex flex-col gap-y-4">
@@ -126,16 +130,8 @@ export const Toolbar = ({
         <ToolButton
           label="Image"
           icon={ImageIcon}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Inserting,
-              layerType: LayerType.Image,
-            })
-          }
-          isActive={
-            canvasState.mode === CanvasMode.Inserting &&
-            canvasState.layerType === LayerType.Image
-          }
+          onClick={() => onImagePanelToggle?.()}
+          isActive={isImagePanelOpen}
         />
 
         <ToolButton
