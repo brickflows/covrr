@@ -212,6 +212,45 @@ export const Message = ({
   );
 
   // Convert image to Image layer for text editing
+  const convertToImageLayer = useMutation(
+    ({ storage, setMyPresence }, imageUrl: string, imageIndex: number) => {
+      const liveLayers = storage.get("layers");
+      const liveLayerIds = storage.get("layerIds");
+
+      // Get current size and position
+      const currentSize = imageSizes[imageIndex] || { width: 240, height: 360 };
+      const xOffset = imageSizes.slice(0, imageIndex).reduce((sum, size, i) => {
+        if (imageVisibility[i]) {
+          return sum + (size?.width || 240) + 10;
+        }
+        return sum;
+      }, 0);
+
+      // Create new Image layer
+      const layerId = nanoid();
+      const layer = new LiveObject({
+        type: LayerType.Image,
+        x: x + xOffset,
+        y: y + height + 10,
+        width: currentSize.width,
+        height: currentSize.height,
+        fill: { r: 255, g: 255, b: 255 },
+        imageUrl: imageUrl,
+        imageName: `cover-variant-${imageIndex + 1}`,
+        textWidgets: [],
+      } as any);
+
+      liveLayerIds.push(layerId);
+      liveLayers.set(layerId, layer);
+
+      // Select the new layer
+      setMyPresence({ selection: [layerId] }, { addToHistory: true });
+
+      toast.success("Image added to canvas!");
+      return layerId;
+    },
+    [x, y, width, height, imageSizes, imageVisibility]
+  );
 
   const handleSend = async () => {
     if (tempValue.trim() || tempImages.length > 0) {
@@ -857,7 +896,8 @@ export const Message = ({
                   draggable={false}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedImage(index);
+                    // Create Image layer on canvas when clicked
+                    convertToImageLayer(imageUrl, index);
                   }}
                   style={{ cursor: 'pointer' }}
                 />
