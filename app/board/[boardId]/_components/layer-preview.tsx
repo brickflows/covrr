@@ -132,6 +132,7 @@ const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId
             selectionColor={selectionColor}
             boardId={boardId || ""}
             onImageClick={onImageClick}
+            onImageSelect={onImageSelect}
           />
         );
       case LayerType.Image:

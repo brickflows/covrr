@@ -19,6 +19,7 @@ interface MessageProps {
   selectionColor?: string;
   boardId: string;
   onImageClick?: (imageUrl: string) => void;
+  onImageSelect?: (imageUrl: string) => void;
 }
 
 export const Message = ({
@@ -28,6 +29,7 @@ export const Message = ({
   selectionColor,
   boardId,
   onImageClick,
+  onImageSelect,
 }: MessageProps) => {
   const { x, y, width, height, fill, value, negativePrompt: savedNegativePrompt, images: savedImages, generatedImageSizes: savedImageSizes, generatedImageVisibility: savedImageVisibility } = layer;
   const [isEditing, setIsEditing] = useState(!value);
@@ -50,7 +52,6 @@ export const Message = ({
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStartPos, setResizeStartPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [imageVisibility, setImageVisibility] = useState<boolean[]>([true, true, true, true]);
-  const [createdImageLayers, setCreatedImageLayers] = useState<{ [index: number]: string }>({}); // Maps image index to layer ID
   const negativePromptRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -212,62 +213,6 @@ export const Message = ({
     [],
   );
 
-  // Check if layer exists, if yes select it, if no create it
-  const selectOrCreateImageLayer = useMutation(
-    ({ storage, setMyPresence }, imageUrl: string, imageIndex: number) => {
-      // Check if we already created a layer for this image
-      const existingLayerId = createdImageLayers[imageIndex];
-
-      if (existingLayerId) {
-        // Check if the layer still exists in storage
-        const liveLayers = storage.get("layers");
-        const layerExists = liveLayers.get(existingLayerId);
-
-        if (layerExists) {
-          // Just select the existing layer
-          setMyPresence({ selection: [existingLayerId] }, { addToHistory: true });
-          toast.info("Image layer selected!");
-          return existingLayerId;
-        }
-      }
-
-      // Create new Image layer if doesn't exist
-      const liveLayers = storage.get("layers");
-      const liveLayerIds = storage.get("layerIds");
-
-      const currentSize = imageSizes[imageIndex] || { width: 240, height: 360 };
-      const xOffset = imageSizes.slice(0, imageIndex).reduce((sum, size, i) => {
-        if (imageVisibility[i]) {
-          return sum + (size?.width || 240) + 10;
-        }
-        return sum;
-      }, 0);
-
-      const layerId = nanoid();
-      const layer = new LiveObject({
-        type: LayerType.Image,
-        x: x + xOffset,
-        y: y + height + 10,
-        width: currentSize.width,
-        height: currentSize.height,
-        fill: { r: 255, g: 255, b: 255 },
-        imageUrl: imageUrl,
-        imageName: `cover-variant-${imageIndex + 1}`,
-        textWidgets: [],
-      } as any);
-
-      liveLayerIds.push(layerId);
-      liveLayers.set(layerId, layer);
-      setMyPresence({ selection: [layerId] }, { addToHistory: true });
-
-      // Track this layer ID
-      setCreatedImageLayers(prev => ({ ...prev, [imageIndex]: layerId }));
-
-      toast.success("Image added to canvas!");
-      return layerId;
-    },
-    [x, y, width, height, imageSizes, imageVisibility, createdImageLayers]
-  );
 
   const handleSend = async () => {
     if (tempValue.trim() || tempImages.length > 0) {
@@ -913,8 +858,8 @@ export const Message = ({
                   draggable={false}
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Select existing or create new Image layer
-                    selectOrCreateImageLayer(imageUrl, index);
+                    // Directly update the panel with this image URL
+                    onImageSelect?.(imageUrl);
                   }}
                   style={{ cursor: 'pointer' }}
                 />
