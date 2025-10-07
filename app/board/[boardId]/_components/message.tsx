@@ -27,7 +27,7 @@ export const Message = ({
   boardId,
   onImageClick,
 }: MessageProps) => {
-  const { x, y, width, height, fill, value, negativePrompt: savedNegativePrompt, images: savedImages } = layer;
+  const { x, y, width, height, fill, value, negativePrompt: savedNegativePrompt, images: savedImages, generatedImageSizes: savedImageSizes, generatedImageVisibility: savedImageVisibility } = layer;
   const [isEditing, setIsEditing] = useState(!value);
   const [tempValue, setTempValue] = useState(value || "");
   const [negativePrompt, setNegativePrompt] = useState(savedNegativePrompt || "");
@@ -72,29 +72,43 @@ export const Message = ({
       setGeneratedImages(savedConvexImages.imageUrls);
       setSelectedImage(0); // Auto-select first image
 
-      // Load images to get their aspect ratios
-      const loadImageAspectRatios = async () => {
-        const ratios = await Promise.all(
-          savedConvexImages.imageUrls.map((url: string) => {
-            return new Promise<number>((resolve) => {
-              const img = new Image();
-              img.onload = () => {
-                resolve(img.width / img.height);
-              };
-              img.onerror = () => {
-                resolve(240 / 360); // Default 2:3 ratio
-              };
-              img.src = url;
-            });
-          })
-        );
-        setImageAspectRatios(ratios);
-        setImageSizes(ratios.map(ratio => ({ width: 240, height: 240 / ratio })));
-      };
+      // Restore saved visibility state if available
+      if (savedImageVisibility && savedImageVisibility.length === 4) {
+        setImageVisibility(savedImageVisibility);
+      }
 
-      loadImageAspectRatios();
+      // Restore saved sizes if available, otherwise load from images
+      if (savedImageSizes && savedImageSizes.length > 0) {
+        setImageSizes(savedImageSizes);
+        // Calculate aspect ratios from saved sizes
+        const ratios = savedImageSizes.map(size => size.width / size.height);
+        setImageAspectRatios(ratios);
+      } else {
+        // Load images to get their aspect ratios
+        const loadImageAspectRatios = async () => {
+          const ratios = await Promise.all(
+            savedConvexImages.imageUrls.map((url: string) => {
+              return new Promise<number>((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                  resolve(img.width / img.height);
+                };
+                img.onerror = () => {
+                  resolve(240 / 360); // Default 2:3 ratio
+                };
+                img.src = url;
+              });
+            })
+          );
+          setImageAspectRatios(ratios);
+          const newSizes = ratios.map(ratio => ({ width: 240, height: 240 / ratio }));
+          setImageSizes(newSizes);
+        };
+
+        loadImageAspectRatios();
+      }
     }
-  }, [savedConvexImages]);
+  }, [savedConvexImages, savedImageSizes, savedImageVisibility]);
 
   // Count incoming connections to this message node
   const incomingConnectionCount = useStorage((root) => {
@@ -175,6 +189,20 @@ export const Message = ({
           value: newValue,
           negativePrompt: newNegativePrompt,
           images: newImages,
+        });
+      }
+    },
+    [],
+  );
+
+  const updateImageStates = useMutation(
+    ({ storage }, newImageSizes: { width: number; height: number }[], newImageVisibility: boolean[]) => {
+      const liveLayers = storage.get("layers");
+      const layer = liveLayers.get(id);
+      if (layer) {
+        layer.update({
+          generatedImageSizes: newImageSizes,
+          generatedImageVisibility: newImageVisibility,
         });
       }
     },
@@ -477,6 +505,13 @@ export const Message = ({
       };
     }
   }, [isResizing, resizeStartPos, expandedImageIndex, imageAspectRatios]);
+
+  // Save image sizes and visibility when they change
+  useEffect(() => {
+    if (imageSizes.length > 0 && generatedImages.length > 0) {
+      updateImageStates(imageSizes, imageVisibility);
+    }
+  }, [imageSizes, imageVisibility, generatedImages.length, updateImageStates]);
 
   // Calculate total height needed for images
   const imageRowHeight = generatedImages.length > 0 && !isEditing

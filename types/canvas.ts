@@ -113,6 +113,8 @@ export type MessageLayer = {
   images?: MessageImage[];
   author?: string;
   timestamp?: number;
+  generatedImageSizes?: { width: number; height: number }[];
+  generatedImageVisibility?: boolean[];
 };
 
 export type Point = {
