@@ -48,7 +48,7 @@ import { TextWidgetEditor } from "./text-widget-editor";
 import { FontSelector } from "./font-selector";
 import { FabricImageCanvas } from "./fabric-image-canvas";
 import { FabricImageCanvasV2 } from "./fabric-image-canvas-v2";
-import { FabricImageCanvasV3 } from "./fabric-image-canvas-v3";
+import FabricImageCanvasV3 from "./fabric-image-canvas-v3";
 import { X } from "lucide-react";
 
 const MAX_LAYERS = 100;
