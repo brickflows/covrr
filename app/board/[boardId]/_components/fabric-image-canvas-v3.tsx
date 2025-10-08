@@ -170,7 +170,7 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
         let originalDimensions: any = null;
 
         canvas.on("object:scaling", (e) => {
-            const obj = e.target;
+            const obj = e.target as any;
             if (obj && obj.type === "textbox") {
                 const transform = (e as any).transform;
                 if (transform?.corner && !currentControl) {
