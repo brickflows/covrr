@@ -166,8 +166,8 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
         canvas.on("selection:cleared", () => setSelectedObject(null));
 
         // Store which control is being used
-        let currentControl = null;
-        let originalDimensions = null;
+        let currentControl: any = null;
+        let originalDimensions: any = null;
 
         canvas.on("object:scaling", (e) => {
             const obj = e.target;
