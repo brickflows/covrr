@@ -185,7 +185,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                 {TEXT_EFFECTS.map((effect) => (
                   <button
                     key={effect.name}
-                    className={`${effect.color} text-white px-3 py-2 rounded text-xs font-medium hover:opacity-90 transition-opacity`}
+                    className="bg-black border border-white text-white px-2.5 py-1.5 text-sm inline-flex items-center justify-center hover:bg-[#222222] transition-all duration-150"
                   >
                     {effect.name}
                   </button>
@@ -209,7 +209,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                       type="text"
                       value={textObj.text || ""}
                       onChange={(e) => updateTextProperty("text", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full bg-black border border-white text-white px-2.5 py-1.5 text-sm focus:outline-none focus:bg-[#222222] transition-all duration-150"
                       placeholder="Enter text..."
                     />
                   </div>
@@ -219,7 +219,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                     <select
                       value={textObj.fontFamily || "Arial"}
                       onChange={(e) => updateTextProperty("fontFamily", e.target.value)}
-                      className="col-span-2 px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="col-span-2 bg-black border border-white text-white px-2.5 py-1.5 text-sm focus:outline-none focus:bg-[#222222] transition-all duration-150 cursor-pointer"
                     >
                       {GOOGLE_FONTS.map((font) => (
                         <option key={font} value={font}>{font}</option>
@@ -229,7 +229,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                       type="number"
                       value={Math.round(textObj.fontSize || 32)}
                       onChange={(e) => updateTextProperty("fontSize", Number(e.target.value))}
-                      className="px-2 py-1.5 border border-gray-300 rounded text-xs text-center focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="bg-black border border-white text-white px-2.5 py-1.5 text-sm text-center focus:outline-none focus:bg-[#222222] transition-all duration-150"
                     />
                   </div>
 
@@ -351,7 +351,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                   </div>
 
                   {/* Text Alignment */}
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     {[
                       { align: "left", icon: AlignLeft },
                       { align: "center", icon: AlignCenter },
@@ -360,19 +360,19 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                       <button
                         key={align}
                         onClick={() => updateTextProperty("textAlign", align)}
-                        className={`flex-1 p-2 border rounded ${
+                        className={`flex-1 bg-black border border-white text-white px-2.5 py-1.5 text-sm inline-flex items-center justify-center transition-all duration-150 ${
                           textObj.textAlign === align
-                            ? "bg-gray-200 border-gray-300"
-                            : "border-gray-300 hover:bg-gray-50"
+                            ? "bg-[#2a2a2a]"
+                            : "hover:bg-[#222222]"
                         }`}
                       >
-                        <Icon size={16} className="mx-auto" />
+                        <Icon size={16} />
                       </button>
                     ))}
                   </div>
 
                   {/* Font Styles */}
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     {[
                       { style: "bold" as const, icon: Bold, active: textObj.fontWeight === "bold" || textObj.fontWeight === 700 },
                       { style: "italic" as const, icon: Italic, active: textObj.fontStyle === "italic" },
@@ -382,11 +382,11 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                       <button
                         key={style}
                         onClick={() => toggleStyle(style)}
-                        className={`flex-1 p-2 border rounded ${
-                          active ? "bg-gray-200 border-gray-300" : "border-gray-300 hover:bg-gray-50"
+                        className={`flex-1 bg-black border border-white text-white px-2.5 py-1.5 text-sm inline-flex items-center justify-center transition-all duration-150 ${
+                          active ? "bg-[#2a2a2a]" : "hover:bg-[#222222]"
                         }`}
                       >
-                        <Icon size={14} className="mx-auto" />
+                        <Icon size={14} />
                       </button>
                     ))}
                   </div>
