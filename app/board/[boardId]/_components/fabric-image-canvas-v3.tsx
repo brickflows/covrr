@@ -83,7 +83,7 @@ const AccordionContent = ({ children, isOpen }) => (
     </div>
 );
 
-export default function FabricTextEditor() {
+export default function FabricTextEditor({ imageUrl }) {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const fabricCanvasRef = useRef(null);
@@ -138,8 +138,6 @@ export default function FabricTextEditor() {
         fabricCanvasRef.current = canvas;
 
         // Load background image
-        const imageUrl = 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800';
-
         fabric.Image.fromURL(imageUrl, (img) => {
             const container = containerRef.current;
             if (!container) return;
@@ -262,7 +260,7 @@ export default function FabricTextEditor() {
         return () => {
             canvas.dispose();
         };
-    }, [fabricLoaded]);
+    }, [fabricLoaded, imageUrl]);
 
     const addText = (text = "THIS IS THE TITLE OF THE BOOK", fontFamily = "Arial") => {
         const canvas = fabricCanvasRef.current;
