@@ -32,10 +32,10 @@ const TEXT_EFFECTS = [
 ];
 
 // Accordion components
-const Accordion = ({ children, defaultOpen = [] }) => {
+const Accordion = ({ children, defaultOpen = [] }: { children: any; defaultOpen?: string[] }) => {
     const [openItems, setOpenItems] = useState(defaultOpen);
 
-    const toggleItem = (value) => {
+    const toggleItem = (value: string) => {
         setOpenItems(prev =>
             prev.includes(value)
                 ? prev.filter(v => v !== value)
@@ -52,7 +52,7 @@ const Accordion = ({ children, defaultOpen = [] }) => {
     );
 };
 
-const AccordionItem = ({ value, children, openItems, toggleItem }) => {
+const AccordionItem = ({ value, children, openItems, toggleItem }: { value: string; children: any; openItems?: string[]; toggleItem?: (value: string) => void }) => {
     const isOpen = openItems?.includes(value);
 
     return (
@@ -64,9 +64,9 @@ const AccordionItem = ({ value, children, openItems, toggleItem }) => {
     );
 };
 
-const AccordionTrigger = ({ children, isOpen, toggleItem, value }) => (
+const AccordionTrigger = ({ children, isOpen, toggleItem, value }: { children: any; isOpen?: boolean; toggleItem?: (value: string) => void; value?: string }) => (
     <button
-        onClick={() => toggleItem?.(value)}
+        onClick={() => toggleItem?.(value!)}
         className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold hover:bg-gray-50"
     >
         <div className="flex items-center gap-2">{children}</div>
@@ -77,13 +77,13 @@ const AccordionTrigger = ({ children, isOpen, toggleItem, value }) => (
     </button>
 );
 
-const AccordionContent = ({ children, isOpen }) => (
+const AccordionContent = ({ children, isOpen }: { children: any; isOpen?: boolean }) => (
     <div className={`overflow-hidden transition-all ${isOpen ? 'max-h-[2000px]' : 'max-h-0'}`}>
         {children}
     </div>
 );
 
-export default function FabricTextEditor({ imageUrl }) {
+export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const fabricCanvasRef = useRef(null);
