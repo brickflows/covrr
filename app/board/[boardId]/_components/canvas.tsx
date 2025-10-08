@@ -48,6 +48,7 @@ import { TextWidgetEditor } from "./text-widget-editor";
 import { FontSelector } from "./font-selector";
 import { FabricImageCanvas } from "./fabric-image-canvas";
 import { FabricImageCanvasV2 } from "./fabric-image-canvas-v2";
+import { FabricImageCanvasV3 } from "./fabric-image-canvas-v3";
 import { X } from "lucide-react";
 
 const MAX_LAYERS = 100;
@@ -874,7 +875,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
           {/* Fabric.js Image Editor - Full Width */}
           <div className="w-full h-full">
             {selectedImageUrl ? (
-              <FabricImageCanvasV2 imageUrl={selectedImageUrl} />
+              <FabricImageCanvasV3 imageUrl={selectedImageUrl} />
             ) : (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-400 text-sm">Select an image on canvas</p>
