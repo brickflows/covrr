@@ -192,14 +192,14 @@ export const FabricImageCanvas = ({ imageUrl, onFontSelect }: FabricImageCanvasP
   const textObj = selectedObject?.type === "textbox" ? selectedObject as fabric.Textbox : null;
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full w-full">
       {/* Canvas Container */}
       <div ref={containerRef} className="flex-1 relative bg-gray-100">
         <canvas ref={canvasRef} />
       </div>
 
       {/* Properties Panel */}
-      <div className="w-80 bg-white border-l overflow-y-auto p-4">
+      <div className="bg-white border-l overflow-y-auto p-4" style={{ width: '280px' }}>
         <button
           onClick={() => addText()}
           className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 mb-4"

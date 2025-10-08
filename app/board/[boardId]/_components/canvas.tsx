@@ -647,9 +647,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
     const handleMouseMove = (e: MouseEvent) => {
       const newWidth = window.innerWidth - e.clientX;
-      // Min width 300px, max width 80% of screen
+      // Min width 300px, max width 50% of screen
       const minWidth = 300;
-      const maxWidth = window.innerWidth * 0.8;
+      const maxWidth = window.innerWidth * 0.5;
       setPanelWidth(Math.max(minWidth, Math.min(maxWidth, newWidth)));
     };
 
@@ -870,12 +870,14 @@ export const Canvas = ({ boardId }: CanvasProps) => {
             <X className="w-5 h-5" />
           </button>
 
-          {/* Section 1: Fabric.js Image Editor */}
-          <div className="relative flex-1 flex items-center justify-center bg-gray-100 overflow-hidden">
+          {/* Fabric.js Image Editor - Full Width */}
+          <div className="w-full h-full">
             {selectedImageUrl ? (
               <FabricImageCanvas imageUrl={selectedImageUrl} />
             ) : (
-              <p className="text-gray-400 text-sm">Select an image on canvas</p>
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-400 text-sm">Select an image on canvas</p>
+              </div>
             )}
           </div>
         </div>
