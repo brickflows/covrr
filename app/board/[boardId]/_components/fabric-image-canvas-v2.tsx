@@ -45,6 +45,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
   const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null);
+  const [, forceUpdate] = useState({});
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -114,6 +115,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
     if (activeObject && activeObject.type === "textbox") {
       (activeObject as any).set({ [property]: value });
       canvas?.renderAll();
+      forceUpdate({});
     }
   };
 
@@ -238,9 +240,6 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                         <label className="text-xs font-mono text-neutral-700">
                           Letter Spacing
                         </label>
-                        <span className="text-xs text-neutral-500">
-                          (0 to 1000)
-                        </span>
                       </div>
 
                       <div className="flex gap-2 items-center">
@@ -259,7 +258,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                           <input
                             type="range"
                             value={textObj.charSpacing || 0}
-                            onChange={(e) => updateTextProperty("charSpacing", Number(e.target.value))}
+                            onInput={(e) => updateTextProperty("charSpacing", Number((e.target as HTMLInputElement).value))}
                             min="0"
                             max="1000"
                             step="10"
@@ -280,9 +279,6 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                         <label className="text-xs font-mono text-neutral-700">
                           Line Height
                         </label>
-                        <span className="text-xs text-neutral-500">
-                          (0.5 to 3.0)
-                        </span>
                       </div>
 
                       <div className="flex gap-2 items-center">
@@ -301,7 +297,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                           <input
                             type="range"
                             value={textObj.lineHeight || 1.16}
-                            onChange={(e) => updateTextProperty("lineHeight", Number(e.target.value))}
+                            onInput={(e) => updateTextProperty("lineHeight", Number((e.target as HTMLInputElement).value))}
                             min="0.5"
                             max="3"
                             step="0.1"
@@ -315,24 +311,6 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                     </div>
                   </div>
 
-                  {/* Color */}
-                  <div className="py-2.5 bg-green-500/5 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div
-                        className="w-8 h-8 rounded border-2 border-gray-300 cursor-pointer"
-                        style={{ backgroundColor: typeof textObj.fill === 'string' ? textObj.fill : "#000" }}
-                        onClick={() => {
-                          const input = document.createElement('input');
-                          input.type = 'color';
-                          input.value = typeof textObj.fill === 'string' ? textObj.fill : "#000000";
-                          input.onchange = (e) => updateTextProperty("fill", (e.target as HTMLInputElement).value);
-                          input.click();
-                        }}
-                      />
-                      <span className="text-xs text-neutral-600 font-mono">Color</span>
-                    </div>
-                  </div>
-
                   {/* Transparency Control */}
                   <div className="py-2.5 bg-green-500/5 rounded-lg p-4">
                     <div className="gap-2 flex flex-col mb-2">
@@ -340,9 +318,6 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                         <label className="text-xs font-mono text-neutral-700">
                           Transparency
                         </label>
-                        <span className="text-xs text-neutral-500">
-                          (0 to 1)
-                        </span>
                       </div>
 
                       <div className="flex gap-2 items-center">
@@ -361,7 +336,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                           <input
                             type="range"
                             value={textObj.opacity !== undefined ? textObj.opacity : 1}
-                            onChange={(e) => updateTextProperty("opacity", Number(e.target.value))}
+                            onInput={(e) => updateTextProperty("opacity", Number((e.target as HTMLInputElement).value))}
                             min="0"
                             max="1"
                             step="0.01"
