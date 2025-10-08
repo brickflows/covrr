@@ -84,7 +84,9 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
     canvas.on("selection:updated", (e) => setSelectedObject(e.selected?.[0] || null));
     canvas.on("selection:cleared", () => setSelectedObject(null));
 
-    return () => canvas.dispose();
+    return () => {
+      canvas.dispose();
+    };
   }, [imageUrl]);
 
   const addText = (text = "THIS IS THE TITLE OF THE BOOK", fontFamily = FONT_FAMILY_DEFAULT) => {
