@@ -231,34 +231,95 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                     />
                   </div>
 
-                  {/* Spacing Controls */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-xs text-gray-600 mb-1 block">Letter Spacing</label>
-                      <input
-                        type="number"
-                        value={textObj.charSpacing || 0}
-                        onChange={(e) => updateTextProperty("charSpacing", Number(e.target.value))}
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs text-center focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      />
+                  {/* Letter Spacing Control */}
+                  <div className="py-2.5 bg-green-500/5 rounded-lg p-4">
+                    <div className="gap-2 flex flex-col mb-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-mono text-neutral-700">
+                          Letter Spacing
+                        </label>
+                        <span className="text-xs text-neutral-500">
+                          (0 to 1000)
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="number"
+                          value={Math.round(textObj.charSpacing || 0)}
+                          onChange={(e) => updateTextProperty("charSpacing", Number(e.target.value))}
+                          min="0"
+                          max="1000"
+                          step="10"
+                          className="w-20 bg-white border border-neutral-300 text-neutral-800 px-2 py-1.5 text-xs focus-visible:bg-green-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
+                          style={{ boxShadow: 'none' }}
+                        />
+
+                        <div className="flex-1 flex items-center min-w-0">
+                          <input
+                            type="range"
+                            value={textObj.charSpacing || 0}
+                            onChange={(e) => updateTextProperty("charSpacing", Number(e.target.value))}
+                            min="0"
+                            max="1000"
+                            step="10"
+                            className="w-full h-3 bg-neutral-300 cursor-pointer appearance-none focus-visible:bg-green-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
+                            style={{
+                              background: `linear-gradient(to right, rgb(100, 100, 100) 0%, rgb(100, 100, 100) ${((textObj.charSpacing || 0) / 1000) * 100}%, rgb(200, 200, 200) ${((textObj.charSpacing || 0) / 1000) * 100}%, rgb(200, 200, 200) 100%)`
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-xs text-gray-600 mb-1 block">Line Height</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={textObj.lineHeight || 1.16}
-                        onChange={(e) => updateTextProperty("lineHeight", Number(e.target.value))}
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs text-center focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      />
+                  </div>
+
+                  {/* Line Height Control */}
+                  <div className="py-2.5 bg-green-500/5 rounded-lg p-4">
+                    <div className="gap-2 flex flex-col mb-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-mono text-neutral-700">
+                          Line Height
+                        </label>
+                        <span className="text-xs text-neutral-500">
+                          (0.5 to 3.0)
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="number"
+                          value={(textObj.lineHeight || 1.16).toFixed(2)}
+                          onChange={(e) => updateTextProperty("lineHeight", Number(e.target.value))}
+                          min="0.5"
+                          max="3"
+                          step="0.1"
+                          className="w-20 bg-white border border-neutral-300 text-neutral-800 px-2 py-1.5 text-xs focus-visible:bg-green-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
+                          style={{ boxShadow: 'none' }}
+                        />
+
+                        <div className="flex-1 flex items-center min-w-0">
+                          <input
+                            type="range"
+                            value={textObj.lineHeight || 1.16}
+                            onChange={(e) => updateTextProperty("lineHeight", Number(e.target.value))}
+                            min="0.5"
+                            max="3"
+                            step="0.1"
+                            className="w-full h-3 bg-neutral-300 cursor-pointer appearance-none focus-visible:bg-green-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
+                            style={{
+                              background: `linear-gradient(to right, rgb(100, 100, 100) 0%, rgb(100, 100, 100) ${(((textObj.lineHeight || 1.16) - 0.5) / 2.5) * 100}%, rgb(200, 200, 200) ${(((textObj.lineHeight || 1.16) - 0.5) / 2.5) * 100}%, rgb(200, 200, 200) 100%)`
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Color */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
+                  <div className="py-2.5 bg-green-500/5 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
                       <div
-                        className="w-6 h-6 rounded border border-gray-300 cursor-pointer"
+                        className="w-8 h-8 rounded border-2 border-gray-300 cursor-pointer"
                         style={{ backgroundColor: typeof textObj.fill === 'string' ? textObj.fill : "#000" }}
                         onClick={() => {
                           const input = document.createElement('input');
@@ -268,7 +329,49 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
                           input.click();
                         }}
                       />
-                      <span className="text-xs text-gray-600">100%</span>
+                      <span className="text-xs text-neutral-600 font-mono">Color</span>
+                    </div>
+                  </div>
+
+                  {/* Transparency Control */}
+                  <div className="py-2.5 bg-green-500/5 rounded-lg p-4">
+                    <div className="gap-2 flex flex-col mb-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-mono text-neutral-700">
+                          Transparency
+                        </label>
+                        <span className="text-xs text-neutral-500">
+                          (0 to 1)
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="number"
+                          value={(textObj.opacity !== undefined ? textObj.opacity : 1).toFixed(2)}
+                          onChange={(e) => updateTextProperty("opacity", Number(e.target.value))}
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          className="w-20 bg-white border border-neutral-300 text-neutral-800 px-2 py-1.5 text-xs focus-visible:bg-green-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
+                          style={{ boxShadow: 'none' }}
+                        />
+
+                        <div className="flex-1 flex items-center min-w-0">
+                          <input
+                            type="range"
+                            value={textObj.opacity !== undefined ? textObj.opacity : 1}
+                            onChange={(e) => updateTextProperty("opacity", Number(e.target.value))}
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            className="w-full h-3 bg-neutral-300 cursor-pointer appearance-none focus-visible:bg-green-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
+                            style={{
+                              background: `linear-gradient(to right, rgb(100, 100, 100) 0%, rgb(100, 100, 100) ${((textObj.opacity !== undefined ? textObj.opacity : 1) * 100)}%, rgb(200, 200, 200) ${((textObj.opacity !== undefined ? textObj.opacity : 1) * 100)}%, rgb(200, 200, 200) 100%)`
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -322,6 +425,32 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
           </Accordion.Item>
         </Accordion.Root>
       </div>
+
+      <style jsx>{`
+        input[type="range"]::-webkit-slider-thumb {
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: rgb(238, 238, 238);
+          cursor: pointer;
+          border: none;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: rgb(238, 238, 238);
+          cursor: pointer;
+          border: none;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+          opacity: 1;
+        }
+      `}</style>
     </div>
   );
 };
