@@ -84,10 +84,10 @@ const AccordionContent = ({ children, isOpen }: { children: any; isOpen?: boolea
 );
 
 export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
-    const canvasRef = useRef(null);
-    const containerRef = useRef(null);
-    const fabricCanvasRef = useRef(null);
-    const [selectedObject, setSelectedObject] = useState(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const fabricCanvasRef = useRef<any>(null);
+    const [selectedObject, setSelectedObject] = useState<any>(null);
     const [, forceUpdate] = useState({});
     const [fabricLoaded, setFabricLoaded] = useState(false);
 
