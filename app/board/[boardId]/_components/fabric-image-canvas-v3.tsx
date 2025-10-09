@@ -47,7 +47,7 @@ const Accordion = ({ children, defaultOpen = [] }: { children: any; defaultOpen?
     return (
         <div className="w-full">
             {React.Children.map(children, child =>
-                React.cloneElement(child, { openItems, toggleItem })
+                React.isValidElement(child) ? React.cloneElement(child, { openItems, toggleItem }) : child
             )}
         </div>
     );
@@ -59,7 +59,7 @@ const AccordionItem = ({ value, children, openItems, toggleItem }: { value: stri
     return (
         <div className="border-b">
             {React.Children.map(children, child =>
-                React.cloneElement(child, { isOpen, toggleItem, value })
+                React.isValidElement(child) ? React.cloneElement(child, { isOpen, toggleItem, value }) : child
             )}
         </div>
     );
