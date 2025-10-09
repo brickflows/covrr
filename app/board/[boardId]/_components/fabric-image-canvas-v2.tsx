@@ -45,7 +45,6 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
   const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null);
-  const [, forceUpdate] = useState({});
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -115,7 +114,7 @@ export const FabricImageCanvasV2 = ({ imageUrl }: FabricImageCanvasProps) => {
     if (activeObject && activeObject.type === "textbox") {
       (activeObject as any).set({ [property]: value });
       canvas?.renderAll();
-      forceUpdate({});
+      setSelectedObject({ ...activeObject } as fabric.Object);
     }
   };
 
