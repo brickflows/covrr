@@ -1,6 +1,5 @@
 import React from "react";
-import { ImageLayer, TextWidget, LayerType } from "@/types/canvas";
-import { useStorage } from "@/liveblocks.config";
+import { ImageLayer, TextWidget } from "@/types/canvas";
 
 interface ImageProps {
   id: string;
@@ -9,6 +8,7 @@ interface ImageProps {
   selectionColor?: string;
   onImageClick?: (layerId: string) => void;
   onImageSelect?: (imageUrl: string) => void;
+  hasOverlays?: boolean;
 }
 
 export const Image = ({
@@ -18,29 +18,9 @@ export const Image = ({
   selectionColor,
   onImageClick,
   onImageSelect,
+  hasOverlays = false,
 }: ImageProps) => {
   const { x, y, width, height, imageUrl, textWidgets = [] } = layer;
-
-  // Check if this image has any overlays
-  const hasOverlays = useStorage((root) => {
-    const layers = root.layers;
-    const layerIds = root.layerIds;
-
-    for (const layerId of layerIds) {
-      const currentLayer = layers.get(layerId);
-      if (currentLayer && currentLayer.type === LayerType.ImageOverlay) {
-        const overlayLayer = currentLayer as any;
-        console.log("Found overlay layer:", layerId, "parent:", overlayLayer.parentImageId, "current image:", id);
-        if (overlayLayer.parentImageId === id) {
-          console.log("Image", id, "has overlays!");
-          return true;
-        }
-      }
-    }
-    return false;
-  });
-
-  console.log("Image", id, "hasOverlays:", hasOverlays);
 
   return (
     <foreignObject
