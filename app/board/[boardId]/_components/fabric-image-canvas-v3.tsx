@@ -396,67 +396,71 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                 </div>
 
                 {/* Fonts Section */}
-                {textObj && (
-                    <AccordionItem
-                        value="fonts"
-                        defaultOpen={true}
-                        trigger={
-                            <>
-                                <Type size={16} />
-                                Fonts
-                            </>
-                        }
-                    >
+                <AccordionItem
+                    value="fonts"
+                    defaultOpen={true}
+                    trigger={
+                        <>
+                            <Type size={16} />
+                            Fonts
+                        </>
+                    }
+                >
+                    {textObj ? (
                         <div className="px-2 py-2 max-h-48 overflow-y-auto">
-                                    <div className="space-y-1">
-                                        {GOOGLE_FONTS.map((font) => (
-                                            <button
-                                                key={font}
-                                                onClick={() => {
-                                                    updateTextProperty("fontFamily", font);
-                                                }}
-                                                className={`w-full text-left px-3 py-2 text-sm rounded transition-colors hover:bg-purple-50 cursor-pointer ${textObj?.fontFamily === font ? "bg-purple-100" : ""}`}
-                                                style={{ fontFamily: font }}
-                                            >
-                                                {font}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                    </AccordionItem>
-                )}
+                            <div className="space-y-1">
+                                {GOOGLE_FONTS.map((font) => (
+                                    <button
+                                        key={font}
+                                        onClick={() => {
+                                            updateTextProperty("fontFamily", font);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 text-sm rounded transition-colors hover:bg-purple-50 cursor-pointer ${textObj?.fontFamily === font ? "bg-purple-100" : ""}`}
+                                        style={{ fontFamily: font }}
+                                    >
+                                        {font}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-xs text-gray-400 text-center py-4">Select text to change font</p>
+                    )}
+                </AccordionItem>
 
                 {/* Effects Section */}
-                {textObj && (
-                    <AccordionItem
-                        value="effects"
-                        defaultOpen={true}
-                        trigger={<>Effects</>}
-                    >
+                <AccordionItem
+                    value="effects"
+                    defaultOpen={true}
+                    trigger={<>Effects</>}
+                >
+                    {textObj ? (
                         <div className="px-4 py-3">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {TEXT_EFFECTS.map((effect) => (
-                                            <button
-                                                key={effect.name}
-                                                className="bg-white border border-black text-black px-2.5 py-1.5 text-sm inline-flex items-center justify-center hover:bg-gray-50 transition-all duration-150"
-                                            >
-                                                {effect.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                    </AccordionItem>
-                )}
+                            <div className="grid grid-cols-2 gap-2">
+                                {TEXT_EFFECTS.map((effect) => (
+                                    <button
+                                        key={effect.name}
+                                        className="bg-white border border-black text-black px-2.5 py-1.5 text-sm inline-flex items-center justify-center hover:bg-gray-50 transition-all duration-150"
+                                    >
+                                        {effect.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-xs text-gray-400 text-center py-4">Select text to apply effects</p>
+                    )}
+                </AccordionItem>
 
                 {/* Properties Section */}
-                {textObj && (
-                    <AccordionItem
-                        value="properties"
-                        defaultOpen={true}
-                        trigger={<>Properties</>}
-                    >
-                                <div className="px-4 py-4 pb-8">
-                                    <div className="space-y-4">
+                <AccordionItem
+                    value="properties"
+                    defaultOpen={true}
+                    trigger={<>Properties</>}
+                >
+                    {textObj ? (
+                        <div className="px-4 py-4 pb-8">
+                            <div className="space-y-4">
                                         {/* Selection Tools - Reorganized */}
                                         <div className="pb-4 border-b space-y-2">
                                             {/* Row 1: Color, Duplicate, Front, Back, Delete, Bold, Italic */}
@@ -792,10 +796,12 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                    </AccordionItem>
-                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-xs text-gray-400 text-center py-4">Select text to edit properties</p>
+                    )}
+                </AccordionItem>
             </div>
         </div>
     );
