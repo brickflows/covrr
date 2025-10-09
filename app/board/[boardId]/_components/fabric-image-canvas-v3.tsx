@@ -32,57 +32,28 @@ const TEXT_EFFECTS = [
     { name: "outline style", color: "bg-purple-400" },
 ];
 
-// Accordion components
-const Accordion = ({ children, defaultOpen = [] }: { children: any; defaultOpen?: string[] }) => {
-    const [openItems, setOpenItems] = useState(defaultOpen);
-
-    const toggleItem = (value: string) => {
-        setOpenItems(prev =>
-            prev.includes(value)
-                ? prev.filter(v => v !== value)
-                : [...prev, value]
-        );
-    };
-
-    return (
-        <div className="w-full">
-            {React.Children.map(children, child =>
-                React.isValidElement(child) ? React.cloneElement(child, { openItems, toggleItem } as any) : child
-            )}
-        </div>
-    );
-};
-
-const AccordionItem = ({ value, children, openItems, toggleItem }: { value: string; children: any; openItems?: string[]; toggleItem?: (value: string) => void }) => {
-    const isOpen = openItems?.includes(value);
+// Simple Accordion using individual state per item
+const AccordionItem = ({ value, defaultOpen = false, trigger, children }: { value: string; defaultOpen?: boolean; trigger: React.ReactNode; children: React.ReactNode }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
         <div className="border-b">
-            {React.Children.map(children, child =>
-                React.isValidElement(child) ? React.cloneElement(child, { isOpen, toggleItem, value } as any) : child
-            )}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold hover:bg-gray-50"
+            >
+                <div className="flex items-center gap-2">{trigger}</div>
+                <ChevronRight
+                    size={16}
+                    className={`transform transition-transform ${isOpen ? 'rotate-90' : ''}`}
+                />
+            </button>
+            <div className={`overflow-hidden transition-all ${isOpen ? 'max-h-[2000px]' : 'max-h-0'}`}>
+                {children}
+            </div>
         </div>
     );
 };
-
-const AccordionTrigger = ({ children, isOpen, toggleItem, value }: { children: any; isOpen?: boolean; toggleItem?: (value: string) => void; value?: string }) => (
-    <button
-        onClick={() => toggleItem?.(value!)}
-        className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold hover:bg-gray-50"
-    >
-        <div className="flex items-center gap-2">{children}</div>
-        <ChevronRight
-            size={16}
-            className={`transform transition-transform ${isOpen ? 'rotate-90' : ''}`}
-        />
-    </button>
-);
-
-const AccordionContent = ({ children, isOpen }: { children: any; isOpen?: boolean }) => (
-    <div className={`overflow-hidden transition-all ${isOpen ? 'max-h-[2000px]' : 'max-h-0'}`}>
-        {children}
-    </div>
-);
 
 export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
     type ExtendedTextbox = FabricTextbox & {
@@ -426,15 +397,18 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                     </button>
                 </div>
 
-                <Accordion defaultOpen={["fonts", "effects", "properties"]}>
-                    {/* Fonts Section */}
-                    <AccordionItem value="fonts">
-                        <AccordionTrigger>
+                {/* Fonts Section */}
+                <AccordionItem
+                    value="fonts"
+                    defaultOpen={true}
+                    trigger={
+                        <>
                             <Type size={16} />
                             Fonts
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <div className="px-2 py-2 max-h-48 overflow-y-auto">
+                        </>
+                    }
+                >
+                    <div className="px-2 py-2 max-h-48 overflow-y-auto">
                                 <div className="space-y-1">
                                     {GOOGLE_FONTS.map((font) => (
                                         <button
@@ -456,14 +430,15 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                                     ))}
                                 </div>
                             </div>
-                        </AccordionContent>
-                    </AccordionItem>
+                </AccordionItem>
 
-                    {/* Effects Section */}
-                    <AccordionItem value="effects">
-                        <AccordionTrigger>Effects</AccordionTrigger>
-                        <AccordionContent>
-                            <div className="px-4 py-3">
+                {/* Effects Section */}
+                <AccordionItem
+                    value="effects"
+                    defaultOpen={true}
+                    trigger={<>Effects</>}
+                >
+                    <div className="px-4 py-3">
                                 <div className="grid grid-cols-2 gap-2">
                                     {TEXT_EFFECTS.map((effect) => (
                                         <button
@@ -475,13 +450,14 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                                     ))}
                                 </div>
                             </div>
-                        </AccordionContent>
-                    </AccordionItem>
+                </AccordionItem>
 
-                    {/* Properties Section */}
-                    <AccordionItem value="properties">
-                        <AccordionTrigger>Properties</AccordionTrigger>
-                        <AccordionContent>
+                {/* Properties Section */}
+                <AccordionItem
+                    value="properties"
+                    defaultOpen={true}
+                    trigger={<>Properties</>}
+                >
                             <div className="px-4 py-4 pb-8">
                                 {textObj ? (
                                     <div className="space-y-4">
@@ -827,9 +803,7 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                                     </p>
                                 )}
                             </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
+                </AccordionItem>
             </div>
         </div>
     );
