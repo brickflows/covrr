@@ -398,59 +398,57 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                 </div>
 
                 {/* Fonts Section */}
-                <AccordionItem
-                    value="fonts"
-                    defaultOpen={true}
-                    trigger={
-                        <>
-                            <Type size={16} />
-                            Fonts
-                        </>
-                    }
-                >
-                    <div className="px-2 py-2 max-h-48 overflow-y-auto">
-                                <div className="space-y-1">
-                                    {GOOGLE_FONTS.map((font) => (
-                                        <button
-                                            key={font}
-                                            onClick={() => {
-                                                if (textObj) {
+                {textObj && (
+                    <AccordionItem
+                        value="fonts"
+                        defaultOpen={true}
+                        trigger={
+                            <>
+                                <Type size={16} />
+                                Fonts
+                            </>
+                        }
+                    >
+                        <div className="px-2 py-2 max-h-48 overflow-y-auto">
+                                    <div className="space-y-1">
+                                        {GOOGLE_FONTS.map((font) => (
+                                            <button
+                                                key={font}
+                                                onClick={() => {
                                                     updateTextProperty("fontFamily", font);
-                                                }
-                                            }}
-                                            disabled={!textObj}
-                                            className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${textObj
-                                                ? "hover:bg-purple-50 cursor-pointer"
-                                                : "opacity-50 cursor-not-allowed"
-                                                } ${textObj?.fontFamily === font ? "bg-purple-100" : ""}`}
-                                            style={{ fontFamily: font }}
-                                        >
-                                            {font}
-                                        </button>
-                                    ))}
+                                                }}
+                                                className={`w-full text-left px-3 py-2 text-sm rounded transition-colors hover:bg-purple-50 cursor-pointer ${textObj?.fontFamily === font ? "bg-purple-100" : ""}`}
+                                                style={{ fontFamily: font }}
+                                            >
+                                                {font}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                </AccordionItem>
+                    </AccordionItem>
+                )}
 
                 {/* Effects Section */}
-                <AccordionItem
-                    value="effects"
-                    defaultOpen={true}
-                    trigger={<>Effects</>}
-                >
-                    <div className="px-4 py-3">
-                                <div className="grid grid-cols-2 gap-2">
-                                    {TEXT_EFFECTS.map((effect) => (
-                                        <button
-                                            key={effect.name}
-                                            className="bg-white border border-black text-black px-2.5 py-1.5 text-sm inline-flex items-center justify-center hover:bg-gray-50 transition-all duration-150"
-                                        >
-                                            {effect.name}
-                                        </button>
-                                    ))}
+                {textObj && (
+                    <AccordionItem
+                        value="effects"
+                        defaultOpen={true}
+                        trigger={<>Effects</>}
+                    >
+                        <div className="px-4 py-3">
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {TEXT_EFFECTS.map((effect) => (
+                                            <button
+                                                key={effect.name}
+                                                className="bg-white border border-black text-black px-2.5 py-1.5 text-sm inline-flex items-center justify-center hover:bg-gray-50 transition-all duration-150"
+                                            >
+                                                {effect.name}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                </AccordionItem>
+                    </AccordionItem>
+                )}
 
                 {/* Properties Section */}
                 {textObj && (
