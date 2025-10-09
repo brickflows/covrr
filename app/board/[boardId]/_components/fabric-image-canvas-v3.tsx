@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { Textbox as FabricTextbox, Canvas as FabricCanvas } from "fabric/fabric-impl";
 import {
     AlignLeft,
@@ -64,11 +64,37 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
         _originalFontSize?: number;
     };
 
+    type SelectionState = {
+        node: ExtendedTextbox;
+        version: number;
+    };
+
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const fabricCanvasRef = useRef<FabricCanvas | null>(null);
-    const [selectedObject, setSelectedObject] = useState<ExtendedTextbox | null>(null);
+    const [selection, setSelection] = useState<SelectionState | null>(null);
     const [fabricLoaded, setFabricLoaded] = useState(false);
+
+    const updateSelection = useCallback(
+        (textbox: ExtendedTextbox | null, bumpVersion = false) => {
+            setSelection((prev) => {
+                if (!textbox) {
+                    return null;
+                }
+
+                if (!prev || prev.node !== textbox) {
+                    return { node: textbox, version: 0 };
+                }
+
+                if (bumpVersion) {
+                    return { node: textbox, version: prev.version + 1 };
+                }
+
+                return prev;
+            });
+        },
+        []
+    );
 
     // Load Fabric.js
     useEffect(() => {
@@ -141,18 +167,29 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
             canvas.setHeight(containerHeight);
         });
 
+        // Store which control is being used
+        let currentControl: string | null = null;
+        let isApplyingTransform = false;
+
+        const handleSelectionChange = (textbox: ExtendedTextbox | null, bump = false) => {
+            currentControl = null;
+            isApplyingTransform = false;
+            if (textbox) {
+                updateSelection(textbox, bump);
+            } else {
+                updateSelection(null);
+            }
+        };
+
         canvas.on("selection:created", (e) => {
             const selected = (e.selected?.[0] as ExtendedTextbox | undefined) ?? null;
-            setSelectedObject(selected);
+            handleSelectionChange(selected, true);
         });
         canvas.on("selection:updated", (e) => {
             const selected = (e.selected?.[0] as ExtendedTextbox | undefined) ?? null;
-            setSelectedObject(selected);
+            handleSelectionChange(selected, true);
         });
-        canvas.on("selection:cleared", () => setSelectedObject(null));
-
-        // Store which control is being used
-        let currentControl: string | null = null;
+        canvas.on("selection:cleared", () => handleSelectionChange(null));
 
         canvas.on("object:scaling", (e) => {
             const obj = e.target as FabricTextbox | undefined;
@@ -166,18 +203,28 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
 
         // Handle text scaling/resizing when done
         canvas.on("object:modified", (e) => {
+            if (isApplyingTransform) {
+                return;
+            }
+
             const obj = e.target as ExtendedTextbox | undefined;
-            if (obj && obj.type === "textbox") {
-                const textbox = obj;
-                const isCornerHandle = currentControl && ['tl', 'tr', 'bl', 'br'].includes(currentControl);
-                const isMiddleHandle = currentControl && ['ml', 'mr'].includes(currentControl);
+            if (obj?.type !== "textbox") {
+                return;
+            }
 
-                const scaleX = textbox.scaleX ?? 1;
-                const scaleY = textbox.scaleY ?? 1;
-                const baseFontSize = textbox.fontSize ?? 16;
-                const baseWidth = textbox.width ?? textbox.getScaledWidth();
-                const baseHeight = textbox.height ?? textbox.getScaledHeight();
+            isApplyingTransform = true;
 
+            const textbox = obj;
+            const isCornerHandle = currentControl && ['tl', 'tr', 'bl', 'br'].includes(currentControl);
+            const isMiddleHandle = currentControl && ['ml', 'mr'].includes(currentControl);
+
+            const scaleX = textbox.scaleX ?? 1;
+            const scaleY = textbox.scaleY ?? 1;
+            const baseFontSize = textbox.fontSize ?? 16;
+            const baseWidth = textbox.width ?? textbox.getScaledWidth();
+            const baseHeight = textbox.height ?? textbox.getScaledHeight();
+
+            try {
                 if (scaleX !== 1 || scaleY !== 1) {
                     if (isCornerHandle) {
                         // Corner handles: scale BOTH text and frame together
@@ -227,20 +274,26 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                         textbox.clipPath = clipRect;
                     }
 
-                    canvas.renderAll();
+                    canvas.requestRenderAll();
                 }
 
-                // Reset control tracking
+                handleSelectionChange(textbox, true);
+            } finally {
                 currentControl = null;
-                setSelectedObject(textbox);
+                isApplyingTransform = false;
             }
+        });
+
+        canvas.on("mouse:up", () => {
+            isApplyingTransform = false;
         });
 
         return () => {
             canvas.dispose();
             fabricCanvasRef.current = null;
+            setSelection(null);
         };
-    }, [fabricLoaded, imageUrl]);
+    }, [fabricLoaded, imageUrl, updateSelection]);
 
     const addText = (text = "THIS IS THE TITLE OF THE BOOK", fontFamily = "Arial") => {
         const canvas = fabricCanvasRef.current;
@@ -275,7 +328,8 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
 
         canvas.add(textbox);
         canvas.setActiveObject(textbox);
-        canvas.renderAll();
+        canvas.requestRenderAll();
+        updateSelection(textbox, true);
     };
 
     const updateTextProperty = (property: string, value: unknown) => {
@@ -289,8 +343,8 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
             } else {
                 (activeObject as any).set(property, value);
             }
-            canvas?.renderAll();
-            setSelectedObject(activeObject as ExtendedTextbox);
+            canvas?.requestRenderAll();
+            updateSelection(activeObject as ExtendedTextbox, true);
         }
     };
 
@@ -307,8 +361,8 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                 });
                 canvas?.add(cloned);
                 canvas?.setActiveObject(cloned);
-                canvas?.renderAll();
-                setSelectedObject(cloned);
+                canvas?.requestRenderAll();
+                updateSelection(cloned, true);
             });
         }
     };
@@ -319,8 +373,8 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
         if (activeObject) {
             canvas?.remove(activeObject);
             canvas?.discardActiveObject();
-            canvas?.renderAll();
-            setSelectedObject(null);
+            canvas?.requestRenderAll();
+            updateSelection(null);
         }
     };
 
@@ -329,7 +383,7 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
         const activeObject = canvas?.getActiveObject();
         if (activeObject) {
             canvas?.bringToFront(activeObject);
-            canvas?.renderAll();
+            canvas?.requestRenderAll();
         }
     };
 
@@ -338,7 +392,7 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
         const activeObject = canvas?.getActiveObject();
         if (activeObject) {
             canvas?.sendToBack(activeObject);
-            canvas?.renderAll();
+            canvas?.requestRenderAll();
         }
     };
 
@@ -359,7 +413,7 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
         }
     };
 
-    const textObj = selectedObject?.type === "textbox" ? selectedObject : null;
+    const textObj = selection?.node?.type === "textbox" ? selection.node : null;
     const fillColor = textObj && typeof textObj.fill === "string" ? textObj.fill : "#FFFFFF";
     const safeScaleX = textObj?.scaleX ?? 1;
     const safeScaleY = textObj?.scaleY ?? 1;
