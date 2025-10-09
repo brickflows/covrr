@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Textbox as FabricTextbox, Canvas as FabricCanvas } from "fabric/fabric-impl";
 import {
     AlignLeft,
@@ -446,7 +446,10 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
         }
     };
 
-    const textObj = selection?.node?.type === "textbox" ? selection.node : null;
+    const textObj = useMemo(
+        () => (selection?.node?.type === "textbox" ? selection.node : null),
+        [selection]
+    );
     const fillColor = textObj && typeof textObj.fill === "string" ? textObj.fill : "#FFFFFF";
     const safeScaleX = textObj?.scaleX ?? 1;
     const safeScaleY = textObj?.scaleY ?? 1;
