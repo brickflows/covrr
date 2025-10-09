@@ -881,8 +881,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
           {/* Fabric.js Image Editor - Full Width */}
           <div className="w-full h-full">
-            {lastValidImageUrlRef.current ? (
-              <FabricImageCanvasV3 key={lastValidImageUrlRef.current} imageUrl={lastValidImageUrlRef.current} />
+            {selectedImageUrl ? (
+              <FabricImageCanvasV2 imageUrl={selectedImageUrl} />
             ) : (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-400 text-sm">Select an image on canvas</p>
