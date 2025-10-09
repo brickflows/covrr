@@ -690,31 +690,39 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         const layers = storage.get("layers");
         const layer = layers.get(layerId);
 
-        if (layer && layer.get("type") === LayerType.Image) {
-          const imageData = layer.toObject() as ImageLayer;
+        if (layer) {
+          const layerData = layer.toObject();
 
-          // Create overlay layer with same dimensions as the image
-          const liveLayerIds = storage.get("layerIds");
-          const overlayId = nanoid();
+          if (layerData.type === LayerType.Image) {
+            const imageData = layerData as ImageLayer;
 
-          const liveLayer = new LiveObject({
-            type: LayerType.ImageOverlay,
-            x: imageData.x,
-            y: imageData.y,
-            height: imageData.height,
-            width: imageData.width,
-            fill: { r: 255, g: 255, b: 255 }, // Transparent white overlay
-            parentImageId: layerId,
-            isVisible: true,
-            textWidgets: [],
-          } as ImageOverlayLayer);
+            // Create overlay layer with same dimensions as the image
+            const liveLayerIds = storage.get("layerIds");
+            const overlayId = nanoid();
 
-          liveLayerIds.push(overlayId);
-          layers.set(overlayId, liveLayer);
+            const liveLayer = new LiveObject<ImageOverlayLayer>({
+              type: LayerType.ImageOverlay,
+              x: imageData.x,
+              y: imageData.y,
+              height: imageData.height,
+              width: imageData.width,
+              fill: { r: 255, g: 255, b: 255 }, // Transparent white overlay
+              parentImageId: layerId,
+              isVisible: true,
+              textWidgets: [],
+            });
 
-          // Select the new overlay
-          setMyPresence({ selection: [overlayId] }, { addToHistory: true });
-          setCanvasState({ mode: CanvasMode.None });
+            liveLayerIds.push(overlayId);
+            layers.set(overlayId, liveLayer);
+
+            // Select the new overlay
+            setMyPresence({ selection: [overlayId] }, { addToHistory: true });
+            setCanvasState({ mode: CanvasMode.None });
+
+            console.log("Created overlay:", overlayId, "for image:", layerId);
+          } else {
+            console.log("Clicked layer is not an image, type:", layerData.type);
+          }
         }
 
         e.stopPropagation();

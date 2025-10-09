@@ -30,13 +30,17 @@ export const Image = ({
       const currentLayer = layers.get(layerId);
       if (currentLayer && currentLayer.type === LayerType.ImageOverlay) {
         const overlayLayer = currentLayer as any;
+        console.log("Found overlay layer:", layerId, "parent:", overlayLayer.parentImageId, "current image:", id);
         if (overlayLayer.parentImageId === id) {
+          console.log("Image", id, "has overlays!");
           return true;
         }
       }
     }
     return false;
   });
+
+  console.log("Image", id, "hasOverlays:", hasOverlays);
 
   return (
     <foreignObject
