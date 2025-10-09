@@ -453,13 +453,13 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                 </AccordionItem>
 
                 {/* Properties Section */}
-                <AccordionItem
-                    value="properties"
-                    defaultOpen={true}
-                    trigger={<>Properties</>}
-                >
-                            <div className="px-4 py-4 pb-8">
-                                {textObj ? (
+                {textObj && (
+                    <AccordionItem
+                        value="properties"
+                        defaultOpen={true}
+                        trigger={<>Properties</>}
+                    >
+                                <div className="px-4 py-4 pb-8">
                                     <div className="space-y-4">
                                         {/* Selection Tools - Reorganized */}
                                         <div className="pb-4 border-b space-y-2">
@@ -797,13 +797,9 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                                             </div>
                                         </div>
                                     </div>
-                                ) : (
-                                    <p className="text-xs text-gray-400 text-center py-4">
-                                        Select a text to edit properties
-                                    </p>
-                                )}
-                            </div>
-                </AccordionItem>
+                                </div>
+                    </AccordionItem>
+                )}
             </div>
         </div>
     );
