@@ -9,6 +9,7 @@ import {
   Type,
   Undo2,
   ImageIcon,
+  Layers,
 } from "lucide-react";
 
 import { CanvasMode, LayerType, type CanvasState } from "@/types/canvas";
@@ -132,6 +133,17 @@ export const Toolbar = ({
           icon={ImageIcon}
           onClick={() => onImagePanelToggle?.()}
           isActive={isImagePanelOpen}
+        />
+
+        <ToolButton
+          label="Layers"
+          icon={Layers}
+          onClick={() =>
+            setCanvasState({
+              mode: CanvasMode.AddingOverlay,
+            })
+          }
+          isActive={canvasState.mode === CanvasMode.AddingOverlay}
         />
 
         <ToolButton

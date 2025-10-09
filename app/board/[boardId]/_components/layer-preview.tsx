@@ -14,6 +14,7 @@ import { Path } from "./path";
 import { Connection } from "./connection";
 import { Message } from "./message";
 import { Image } from "./image";
+import { ImageOverlay } from "./image-overlay";
 
 type LayerPreviewProps = {
   id: string;
@@ -143,6 +144,15 @@ const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId
             onPointerDown={onLayerPointerDown}
             selectionColor={selectionColor}
             onImageSelect={onImageSelect}
+          />
+        );
+      case LayerType.ImageOverlay:
+        return (
+          <ImageOverlay
+            id={id}
+            layer={layer}
+            onPointerDown={onLayerPointerDown}
+            selectionColor={selectionColor}
           />
         );
       default:
