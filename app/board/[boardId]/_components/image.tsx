@@ -1,5 +1,5 @@
 import React from "react";
-import { ImageLayer, TextWidget } from "@/types/canvas";
+import { ImageLayer, TextWidget, LayerType } from "@/types/canvas";
 import { useStorage } from "@/liveblocks.config";
 
 interface ImageProps {
@@ -28,7 +28,7 @@ export const Image = ({
 
     for (const layerId of layerIds) {
       const currentLayer = layers.get(layerId);
-      if (currentLayer && currentLayer.type === 8) { // LayerType.ImageOverlay
+      if (currentLayer && currentLayer.type === LayerType.ImageOverlay) {
         const overlayLayer = currentLayer as any;
         if (overlayLayer.parentImageId === id) {
           return true;
@@ -106,7 +106,7 @@ export const Image = ({
         {/* Layer Indicator Dot */}
         {hasOverlays && (
           <div
-            className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-md pointer-events-none"
+            className="absolute top-2 right-2 w-3 h-3 bg-black rounded-full border-2 border-white shadow-md pointer-events-none"
             title="This image has layers"
           />
         )}

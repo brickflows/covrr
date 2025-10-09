@@ -130,10 +130,10 @@ export const ImageOverlay = ({
           <foreignObject
             x={x + width - 40}
             y={y + 10}
-            width={30}
-            height={30}
+            width={200}
+            height={150}
           >
-            <div className="relative">
+            <div className="relative w-full h-full">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
