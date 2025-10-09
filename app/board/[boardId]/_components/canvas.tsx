@@ -2,7 +2,7 @@
 
 import { LiveObject } from "@liveblocks/client";
 import { nanoid } from "nanoid";
-import React, { useCallback, useState, useMemo, useEffect } from "react";
+import React, { useCallback, useState, useMemo, useEffect, useRef } from "react";
 
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
@@ -587,6 +587,13 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   // Image panel state - simple approach with page state
   const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const lastValidImageUrlRef = useRef<string | null>(null);
+
+  // Keep track of last valid image URL to prevent unmounting during temporary null states
+  if (selectedImageUrl) {
+    lastValidImageUrlRef.current = selectedImageUrl;
+  }
+
   // Responsive panel width: 40% on large screens, max 50% on smaller screens
   const getInitialPanelWidth = () => {
     if (typeof window === 'undefined') return 600;
@@ -874,8 +881,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
           {/* Fabric.js Image Editor - Full Width */}
           <div className="w-full h-full">
-            {selectedImageUrl ? (
-              <FabricImageCanvasV3 imageUrl={selectedImageUrl} />
+            {lastValidImageUrlRef.current ? (
+              <FabricImageCanvasV3 key={lastValidImageUrlRef.current} imageUrl={lastValidImageUrlRef.current} />
             ) : (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-400 text-sm">Select an image on canvas</p>
