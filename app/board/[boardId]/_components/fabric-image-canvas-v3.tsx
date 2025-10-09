@@ -75,25 +75,52 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
     const [selection, setSelection] = useState<SelectionState | null>(null);
     const [fabricLoaded, setFabricLoaded] = useState(false);
 
+    const selectionNodeRef = useRef<ExtendedTextbox | null>(null);
+    const pendingSelectionRef = useRef<{ node: ExtendedTextbox | null; bump: boolean } | null>(null);
+    const rafSelectionRef = useRef<number | null>(null);
+
+    const commitSelectionUpdate = useCallback(() => {
+        const pending = pendingSelectionRef.current;
+        if (!pending) {
+            return;
+        }
+
+        pendingSelectionRef.current = null;
+
+        const { node, bump } = pending;
+        selectionNodeRef.current = node;
+
+        setSelection((prev) => {
+            if (!node) {
+                return null;
+            }
+
+            if (!prev || prev.node !== node) {
+                return { node, version: 0 };
+            }
+
+            if (bump) {
+                return { node, version: prev.version + 1 };
+            }
+
+            return prev;
+        });
+    }, []);
+
     const updateSelection = useCallback(
         (textbox: ExtendedTextbox | null, bumpVersion = false) => {
-            setSelection((prev) => {
-                if (!textbox) {
-                    return null;
-                }
+            pendingSelectionRef.current = { node: textbox, bump: bumpVersion };
 
-                if (!prev || prev.node !== textbox) {
-                    return { node: textbox, version: 0 };
-                }
+            if (rafSelectionRef.current !== null) {
+                return;
+            }
 
-                if (bumpVersion) {
-                    return { node: textbox, version: prev.version + 1 };
-                }
-
-                return prev;
+            rafSelectionRef.current = requestAnimationFrame(() => {
+                rafSelectionRef.current = null;
+                commitSelectionUpdate();
             });
         },
-        []
+        [commitSelectionUpdate]
     );
 
     // Load Fabric.js
@@ -289,6 +316,12 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
         });
 
         return () => {
+            if (rafSelectionRef.current !== null) {
+                cancelAnimationFrame(rafSelectionRef.current);
+                rafSelectionRef.current = null;
+            }
+            pendingSelectionRef.current = null;
+            selectionNodeRef.current = null;
             canvas.dispose();
             fabricCanvasRef.current = null;
             setSelection(null);
