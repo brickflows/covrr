@@ -68,7 +68,6 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const fabricCanvasRef = useRef<FabricCanvas | null>(null);
     const [selectedObject, setSelectedObject] = useState<ExtendedTextbox | null>(null);
-    const [, forceUpdate] = useState({});
     const [fabricLoaded, setFabricLoaded] = useState(false);
 
     // Load Fabric.js
@@ -162,7 +161,6 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                 if (transform?.corner && !currentControl) {
                     currentControl = transform.corner;
                 }
-                forceUpdate({});
             }
         });
 
@@ -230,11 +228,11 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                     }
 
                     canvas.renderAll();
-                    forceUpdate({});
                 }
 
                 // Reset control tracking
                 currentControl = null;
+                setSelectedObject(textbox);
             }
         });
 
@@ -292,7 +290,7 @@ export default function FabricTextEditor({ imageUrl }: { imageUrl: string }) {
                 (activeObject as any).set(property, value);
             }
             canvas?.renderAll();
-            forceUpdate({});
+            setSelectedObject(activeObject as ExtendedTextbox);
         }
     };
 
