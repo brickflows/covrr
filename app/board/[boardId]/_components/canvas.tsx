@@ -29,8 +29,6 @@ import {
   type CanvasState,
   type Color,
   LayerType,
-  type ImageLayer,
-  type ImageOverlayLayer,
   type Point,
   type Side,
   type XYWH,
@@ -678,56 +676,12 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   }, [isResizingPanel]);
 
   const onLayerPointerDown = useMutation(
-    ({ self, setMyPresence, storage }, e: React.PointerEvent, layerId: string) => {
+    ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
       if (
         canvasState.mode === CanvasMode.Pencil ||
         canvasState.mode === CanvasMode.Inserting
       )
         return;
-
-      // Handle adding overlay to image
-      if (canvasState.mode === CanvasMode.AddingOverlay) {
-        const layers = storage.get("layers");
-        const layer = layers.get(layerId);
-
-        if (layer) {
-          const layerData = layer.toObject();
-
-          if (layerData.type === LayerType.Image) {
-            const imageData = layerData as ImageLayer;
-
-            // Create overlay layer with same dimensions as the image
-            const liveLayerIds = storage.get("layerIds");
-            const overlayId = nanoid();
-
-            const liveLayer = new LiveObject<ImageOverlayLayer>({
-              type: LayerType.ImageOverlay,
-              x: imageData.x,
-              y: imageData.y,
-              height: imageData.height,
-              width: imageData.width,
-              fill: { r: 255, g: 255, b: 255 }, // Transparent white overlay
-              parentImageId: layerId,
-              isVisible: true,
-              textWidgets: [],
-            });
-
-            liveLayerIds.push(overlayId);
-            layers.set(overlayId, liveLayer);
-
-            // Select the new overlay
-            setMyPresence({ selection: [overlayId] }, { addToHistory: true });
-            setCanvasState({ mode: CanvasMode.None });
-
-            console.log("Created overlay:", overlayId, "for image:", layerId);
-          } else {
-            console.log("Clicked layer is not an image, type:", layerData.type);
-          }
-        }
-
-        e.stopPropagation();
-        return;
-      }
 
       history.pause();
       e.stopPropagation();

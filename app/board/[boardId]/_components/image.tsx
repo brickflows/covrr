@@ -8,7 +8,6 @@ interface ImageProps {
   selectionColor?: string;
   onImageClick?: (layerId: string) => void;
   onImageSelect?: (imageUrl: string) => void;
-  hasOverlays?: boolean;
 }
 
 export const Image = ({
@@ -18,7 +17,6 @@ export const Image = ({
   selectionColor,
   onImageClick,
   onImageSelect,
-  hasOverlays = false,
 }: ImageProps) => {
   const { x, y, width, height, imageUrl, textWidgets = [] } = layer;
 
@@ -84,14 +82,6 @@ export const Image = ({
             style={{
               border: `2px solid ${selectionColor}`,
             }}
-          />
-        )}
-
-        {/* Layer Indicator Dot */}
-        {hasOverlays && (
-          <div
-            className="absolute top-2 right-2 w-3 h-3 bg-black rounded-full border-2 border-white shadow-md pointer-events-none"
-            title="This image has layers"
           />
         )}
       </div>

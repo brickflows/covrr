@@ -33,7 +33,6 @@ export enum LayerType {
   Connection,
   Message,
   Image,
-  ImageOverlay,
 }
 
 export type RectangleLayer = {
@@ -132,18 +131,6 @@ export type ImageLayer = {
   textWidgets?: TextWidget[];
 };
 
-export type ImageOverlayLayer = {
-  type: LayerType.ImageOverlay;
-  x: number;
-  y: number;
-  height: number;
-  width: number;
-  fill: Color;
-  parentImageId: string; // Reference to the image this overlay is on
-  isVisible: boolean; // Whether this overlay is currently visible
-  textWidgets?: TextWidget[]; // Text that can be added on the overlay
-};
-
 export type MessageLayer = {
   type: LayerType.Message;
   x: number;
@@ -219,9 +206,6 @@ export type CanvasState =
       startLayerId: string;
       startPoint: Point;
       currentPoint?: Point;
-    }
-  | {
-      mode: CanvasMode.AddingOverlay;
     };
 
 export enum CanvasMode {
@@ -233,7 +217,6 @@ export enum CanvasMode {
   Resizing,
   Pencil,
   Connecting,
-  AddingOverlay,
 }
 
 export type Layer =
@@ -244,5 +227,4 @@ export type Layer =
   | NoteLayer
   | ConnectionLayer
   | MessageLayer
-  | ImageLayer
-  | ImageOverlayLayer;
+  | ImageLayer;

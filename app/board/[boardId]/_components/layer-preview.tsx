@@ -14,7 +14,6 @@ import { Path } from "./path";
 import { Connection } from "./connection";
 import { Message } from "./message";
 import { Image } from "./image";
-import { ImageOverlay } from "./image-overlay";
 
 type LayerPreviewProps = {
   id: string;
@@ -28,25 +27,6 @@ type LayerPreviewProps = {
 const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId, onImageClick, onImageSelect }: LayerPreviewProps) => {
     const layer = useStorage((root) => root.layers.get(id));
     const layers = useStorage((root) => root.layers);
-
-    // Check if this image has overlays
-    const hasOverlays = useStorage((root) => {
-      if (!layer || layer.type !== LayerType.Image) return false;
-
-      const allLayers = root.layers;
-      const layerIds = root.layerIds;
-
-      for (const layerId of layerIds) {
-        const currentLayer = allLayers.get(layerId);
-        if (currentLayer && currentLayer.type === LayerType.ImageOverlay) {
-          const overlayLayer = currentLayer as any;
-          if (overlayLayer.parentImageId === id) {
-            return true;
-          }
-        }
-      }
-      return false;
-    });
 
     if (!layer) return null;
 
@@ -163,16 +143,6 @@ const LayerPreviewComponent = ({ id, onLayerPointerDown, selectionColor, boardId
             onPointerDown={onLayerPointerDown}
             selectionColor={selectionColor}
             onImageSelect={onImageSelect}
-            hasOverlays={hasOverlays}
-          />
-        );
-      case LayerType.ImageOverlay:
-        return (
-          <ImageOverlay
-            id={id}
-            layer={layer}
-            onPointerDown={onLayerPointerDown}
-            selectionColor={selectionColor}
           />
         );
       default:
