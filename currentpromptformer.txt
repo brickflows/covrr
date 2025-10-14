@@ -1,0 +1,133 @@
+Render the generated image inside a framed card with the following UI, proportions, and interaction affordances. Do not alter or describe the image contents—only wrap it.
+
+Overall frame
+
+Card size: 360 × 540 px (responsive; max-width 480).
+
+Background: #FFFFFF.
+
+Border: 2 px solid #000000 (pure black).
+
+Corner radius: 8 px.
+
+Inner padding: 12 px on all sides.
+
+Drop shadow: none.
+
+Title bar (top, inside the card; height 32 px)
+
+Left: label “Image” in 12 px, weight 600, color #1A1A1A.
+
+Right controls (horizontally spaced 12 px):
+
+kebab menu (three vertical dots),
+
+lock icon (closed),
+
+play/preview triangle.
+
+Title bar divider under it: 1 px #E5E5E5.
+
+Canvas area
+
+Image is centered, fit-contain, preserving original aspect ratio, maxing out the drawable region beneath the title bar and above the caption.
+
+No filters, no color shifts.
+
+Behind transparent areas of the image, show the card’s white background.
+
+Caption
+
+Text: “hukj was heer” (exact spelling).
+
+Position: bottom inside the card, centered.
+
+Style: 16 px, weight 700, tracking 0.2 px, color #111827; subtle text shadow 0 1px 0 #FFFFFF for legibility.
+
+Top margin from image: 8 px.
+
+Selection state (when the card is selected)
+
+Show a blue selection rectangle that hugs the card’s outer edge (outside the black border).
+
+Stroke: 1.5 px #3B82F6 (Tailwind blue-500).
+
+8 resize handles at each corner and mid-edge:
+
+Handle size: 8 × 8 px squares.
+
+Fill: #3B82F6; border: 2 px #FFFFFF; corner radius 2 px.
+
+Rotation handle: hide (none).
+
+Cursor behaviors:
+
+Corners: nwse-resize / nesw-resize as appropriate.
+
+Mid-edges: ew-resize / ns-resize.
+
+Inside drag: move.
+
+Snapping: none; free movement.
+
+Resize behavior:
+
+Resizing the blue box scales the entire card and its contents together (image, title bar, icons, caption) proportionally (lock aspect ratio by default).
+
+Modifier Shift toggles freeform (unlocked) resizing.
+
+Typography scales smoothly with card size (use proportional scaling, base at 480 px width).
+
+Hit area: selection handles are clickable with a 16 px minimum interactive target.
+
+Idle (not selected)
+
+Hide blue rectangle and handles; keep the black card border visible.
+
+Iconography
+
+Simple stroked icons, currentColor #111827, stroke width 1.5 px, size 14 px, vertically centered in the title bar.
+
+Spacing & layout constants
+
+Title bar side padding: 8 px left/right.
+
+Control group spacing: 12 px between icons.
+
+Card gutter (when multiple cards are shown): 16 px.
+
+Accessibility
+
+Ensure at least 4.5:1 contrast for all text/icons over backgrounds.
+
+Provide alt="" for the image wrapper (presentation role) since content is not to be described here.
+
+
+{
+  "frame": {
+    "width": 360,  - default
+    "height": 540,  - default
+    "padding": 12,
+    "border": { "color": "#000000", "width": 2, "radius": 8 },
+    "background": "#FFFFFF"
+  },
+  "titlebar": {
+    "height": 32,
+    "label": { "text": "Image", "size": 12, "weight": 600, "color": "#1A1A1A" },
+    "icons": ["kebab", "lock", "play"],
+    "divider": { "color": "#E5E5E5", "width": 1 }
+  }, 
+  "selectionStyle": {
+    "stroke": { "color": "#3B82F6", "width": 1.5 },
+    "handle": {
+      "size": 8,
+      "fill": "#3B82F6",
+      "border": { "color": "#FFFFFF", "width": 2 },
+      "radius": 2
+    },
+    "showRotation": false,
+    "resize": { "proportionalDefault": true, "shiftUnlocksAspect": true }
+  }
+}
+
+image of style: C:\Users\Admin\Downloads\2025-10-10 20_51_48-tldraw computer

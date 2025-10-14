@@ -1,0 +1,160 @@
+Feature: NodeMessage ⇄ Layer Box (attach exact layer visuals)
+Scope / Gate
+
+Available only on NodeMessages connected to an Image Container.
+
+Hidden/disabled on standalone messages or when the target container has no layers.
+
+UI: Layer Box (in the NodeMessage header row)
+
+Form factor: compact pill/button with border; text = current layer name; right chevron.
+
+Idle: white tile, black text, 1px black border, 6px radius.
+
+Active/pressed: black tile / white text, chevron white (matches your active style).
+
+Placement: left side of NodeMessage header, before Send/Media icons.
+
+Action: click opens a dropdown directly below the Layer Box.
+
+Dropdown
+
+Width: matches the Layer Box width; anchored to its left edge; 8px vertical offset.
+
+Contents: scrollable list of all layers from the connected Image Container.
+
+Each item: layer name (inline-editable on double-click), small thumbnail (most recent capture if any), and an overflow “⋯” menu (Rename, Duplicate*(disabled for now)*, Delete).
+
+Current selection has a checkmark.
+
+Search (optional): filter by name.
+
+Empty state: “No layers yet.” (disabled attach CTA).
+
+Behavior on Select
+
+When a layer is chosen from the dropdown:
+
+Resolve the source
+
+Find the attached Fabric canvas of that Image Container and the specific Layer (by layer_id).
+
+Capture exact visuals (snapshot)
+
+Make an offscreen canvas sized to the current image viewport (same pixels after container scaling; cap longest edge to 2048 px to limit size).
+
+Render order for Composite Snapshot:
+
+Background Image (the scaled Fabric background).
+
+Layer’s visible children (text, shapes, stickers, etc.).
+
+Any non-destructive effects that visually change the layer (e.g., overlays) so the bitmap truly matches on-screen.
+
+Export PNG (to preserve transparency if any overlays require it); if no transparency is needed, allow JPEG quality 0.9.
+
+If the layer contains a Mask (“marks”)
+
+Produce a second bitmap: the Mask Matte.
+
+Create a same-size offscreen canvas; fill black (#000).
+
+Draw the mask selected region in white (#fff) exactly as used by the layer’s clip/mask (i.e., white = keep, black = hide). Anti-aliasing should match the brush softness.
+
+Export as PNG (binary matte; 8-bit).
+
+Attach to the NodeMessage
+
+Insert one or two image attachments (preview chips) at the top of the message composer:
+
+Composite (always).
+
+Mask Matte (only when the layer has mask content).
+
+The attachments look like uploaded images, but they’re local snapshots. They carry metadata (see schema below).
+
+The message stays editable; user can add text, then Send.
+
+Persist snapshot(s)
+
+Save assets to your storage (project bucket) and persist the message draft with attachment URIs.
+
+Include a source_hash or source_version so we know if the layer changed after capture.
+
+Live vs Snapshot
+
+This feature captures a snapshot of the layer at selection time.
+
+If the layer changes later, we do not mutate the existing message attachments automatically.
+
+Provide a small “Refresh” action on each attachment to recapture from the same container_id + layer_id.
+
+Mask Detection (decide when to attach the matte)
+
+A layer is considered masked if any of the following are true:
+
+It has a clipPath or mask object applied to the background.
+
+It holds mask brush strokes or a stored alpha/matte channel.
+
+Only then produce and attach the Mask Matte image in addition to the composite.
+
+File/Asset Decisions
+
+Dimensions: exact viewport pixels at time of capture; clamp max dimension to 2048 px (keep aspect).
+
+Formats:
+
+Composite: PNG (or JPEG 90 if fully opaque and smaller >25% vs PNG).
+
+Matte: PNG (binary).
+
+Naming:
+
+layer-{layer_id}-{ts}-composite.png
+
+layer-{layer_id}-{ts}-mask.png
+
+Storage path: /projects/{project_id}/containers/{container_id}/layers/{layer_id}/snapshots/{ts}/…
+
+Data Model (attached to each NodeMessage attachment)
+{
+  "type": "layer_snapshot",
+  "container_id": "<uuid>",
+  "layer_id": "<uuid>",
+  "layer_name": "Cover Mask",
+  "snapshot_ts": "2025-10-13T18:55:00Z",
+  "composite": {
+    "uri": "https://…/composite.png",
+    "w": 1280, "h": 720, "format": "png"
+  },
+  "mask": {
+    "uri": "https://…/mask.png",
+    "w": 1280, "h": 720, "format": "png"
+  },
+  "source_version": {
+    "image_transform": "<hash-of-scale/pos>",
+    "layer_children_hash": "<hash>",
+    "mask_hash": "<hash-or-null>"
+  }
+}
+
+Rename Layer (inline)
+
+In the dropdown, double-click the layer name → becomes an inline input.
+
+Enter to save, Esc to cancel.
+
+Persist name immediately; update everywhere (layer list, layer box label, attachments’ layer_name on next capture).
+
+States & Guardrails
+
+Disabled state: Layer Box is disabled if the NodeMessage has no connected image container. Tooltip: “Connect to an image to attach a layer.”
+
+No layers: Button enabled → dropdown opens → empty state.
+
+Busy capturing: show a lightweight progress bar under the Layer Box; disable repeated clicks.
+
+Failure: toast “Couldn’t capture this layer. Try again.” (include reason in logs).
+
+Mask only / Hidden background? If the layer hides the image entirely, still output what is visible (could be text over empty); matte logic still applies.
